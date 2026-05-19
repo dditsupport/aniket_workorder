@@ -10,13 +10,27 @@ use App\Helpers;
     </h2>
     <?php if ($list['description']): ?><small class="text-secondary"><?= Helpers::esc($list['description']) ?></small><?php endif; ?>
   </div>
-  <div>
-    <?php if (Auth::can('admin')): ?>
-      <a class="btn btn-outline-secondary btn-sm" href="<?= Helpers::esc(Helpers::url('/price-lists/' . $list['id'] . '/edit')) ?>">Rename list</a>
-    <?php endif; ?>
-    <a class="btn btn-link btn-sm" href="<?= Helpers::esc(Helpers::url('/price-lists')) ?>">&larr; All Lists</a>
-  </div>
+  <a class="btn btn-link btn-sm" href="<?= Helpers::esc(Helpers::url('/price-lists')) ?>">&larr; All Lists</a>
 </div>
+
+<?php if (Auth::can('admin')): ?>
+<details class="card mb-3"><summary class="card-header" style="cursor:pointer">List settings (name / description / active)</summary>
+  <div class="card-body">
+    <form method="post" action="<?= Helpers::esc(Helpers::url('/price-lists/' . $list['id'])) ?>" class="row g-2 align-items-end">
+      <?= Csrf::field() ?>
+      <div class="col-md-4"><label class="form-label">Name</label>
+        <input class="form-control" name="name" required maxlength="100" value="<?= Helpers::esc($list['name']) ?>"></div>
+      <div class="col-md-5"><label class="form-label">Description</label>
+        <input class="form-control" name="description" maxlength="255" value="<?= Helpers::esc((string)$list['description']) ?>"></div>
+      <div class="col-md-2 form-check ms-3 mb-2">
+        <input class="form-check-input" type="checkbox" name="active" value="1" id="active" <?= (int)$list['active'] === 1 ? 'checked' : '' ?>>
+        <label class="form-check-label" for="active">Active</label>
+      </div>
+      <div class="col-md-1"><button class="btn btn-outline-primary w-100">Save</button></div>
+    </form>
+  </div>
+</details>
+<?php endif; ?>
 
 <div class="row g-3">
   <div class="col-md-8">

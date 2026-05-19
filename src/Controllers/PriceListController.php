@@ -27,8 +27,8 @@ final class PriceListController
 
     public static function edit(array $p): void
     {
-        $row = self::find((int)$p['id']);
-        Helpers::render('price_list/form', ['title' => 'Edit Price List', 'row' => $row]);
+        // Edit + items management now live on one page.
+        Helpers::redirect('/price-lists/' . (int)$p['id']);
     }
 
     public static function store(): void
@@ -54,13 +54,13 @@ final class PriceListController
         self::find($id);
         $d = self::collect();
         $err = self::validate($d);
-        if ($err) { Helpers::flash('error', $err); Helpers::redirect("/price-lists/{$id}/edit"); }
+        if ($err) { Helpers::flash('error', $err); Helpers::redirect("/price-lists/{$id}"); }
         try {
             $stmt = Database::pdo()->prepare("UPDATE price_lists SET name=?, description=?, active=? WHERE id=?");
             $stmt->execute([$d['name'], $d['description'], $d['active'], $id]);
         } catch (\PDOException $e) {
             Helpers::flash('error', $e->errorInfo[1] === 1062 ? 'A price list with that name already exists.' : 'Could not update.');
-            Helpers::redirect("/price-lists/{$id}/edit");
+            Helpers::redirect("/price-lists/{$id}");
         }
         Helpers::flash('success', 'Price list updated.');
         Helpers::redirect('/price-lists/' . $id);
