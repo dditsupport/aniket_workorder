@@ -131,6 +131,27 @@ final class PriceListController
         Helpers::redirect('/price-lists/' . $id);
     }
 
+    public static function updateItem(array $p): void
+    {
+        $id  = (int)$p['id'];
+        $lid = (int)$p['lid'];
+        $price = (float)Helpers::input('price', -1);
+        if ($price < 0) {
+            Helpers::flash('error', 'Price must be a non-negative number.');
+            Helpers::redirect('/price-lists/' . $id);
+        }
+        $stmt = Database::pdo()->prepare(
+            "UPDATE price_list_items SET price=? WHERE id=? AND price_list_id=?"
+        );
+        $stmt->execute([$price, $lid, $id]);
+        if ($stmt->rowCount() === 0) {
+            Helpers::flash('error', 'No matching price entry to update.');
+        } else {
+            Helpers::flash('success', 'Price updated.');
+        }
+        Helpers::redirect('/price-lists/' . $id);
+    }
+
     public static function destroyItem(array $p): void
     {
         $id  = (int)$p['id'];

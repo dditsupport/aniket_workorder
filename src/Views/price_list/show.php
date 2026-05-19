@@ -28,7 +28,18 @@ use App\Helpers;
           <tr>
             <td><span class="badge text-bg-<?= $ln['item_kind']==='FG' ? 'success' : 'info' ?>"><?= Helpers::esc($ln['item_kind']) ?></span></td>
             <td><?= Helpers::esc($ln['item_name']) ?> <small class="text-secondary">(<?= Helpers::esc($ln['item_code']) ?>)</small></td>
-            <td class="text-num"><?= Helpers::esc(Helpers::money($ln['price'])) ?></td>
+            <td class="text-num" style="min-width:170px">
+              <?php if (Auth::can('admin')): ?>
+                <form method="post" action="<?= Helpers::esc(Helpers::url('/price-lists/' . $list['id'] . '/items/' . $ln['id'])) ?>" class="d-flex gap-1 justify-content-end">
+                  <?= Csrf::field() ?>
+                  <input class="form-control form-control-sm text-end" type="number" step="0.01" min="0" name="price"
+                         value="<?= Helpers::esc(number_format((float)$ln['price'], 2, '.', '')) ?>" required style="max-width:110px">
+                  <button class="btn btn-sm btn-primary">Save</button>
+                </form>
+              <?php else: ?>
+                <?= Helpers::esc(Helpers::money($ln['price'])) ?>
+              <?php endif; ?>
+            </td>
             <td class="text-num text-secondary"><?= Helpers::esc(Helpers::money($ln['base_price'])) ?></td>
             <td class="text-end">
               <?php if (Auth::can('admin')): ?>

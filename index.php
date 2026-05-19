@@ -70,7 +70,8 @@ $router->get('/price-lists/{id}',                     [\App\Controllers\PriceLis
 $router->get('/price-lists/{id}/edit',                [\App\Controllers\PriceListController::class, 'edit'],        'admin');
 $router->post('/price-lists/{id}',                    [\App\Controllers\PriceListController::class, 'update'],      'admin');
 $router->post('/price-lists/{id}/delete',             [\App\Controllers\PriceListController::class, 'destroy'],     'admin');
-$router->post('/price-lists/{id}/items',              [\App\Controllers\PriceListController::class, 'upsertItem'], 'admin');
+$router->post('/price-lists/{id}/items',              [\App\Controllers\PriceListController::class, 'upsertItem'],   'admin');
+$router->post('/price-lists/{id}/items/{lid}',        [\App\Controllers\PriceListController::class, 'updateItem'],  'admin');
 $router->post('/price-lists/{id}/items/{lid}/delete', [\App\Controllers\PriceListController::class, 'destroyItem'],'admin');
 
 // Work orders
