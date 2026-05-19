@@ -16,13 +16,22 @@ INSERT INTO users (id, username, password_hash, name, role, active) VALUES
   (2, 'staff1', '$2y$12$cd4XwHhRz/eetYyhngUaUeiqdNOQo97qz0Mwqzux418z996o2NdoC', 'Ramesh K.',     'operator', 1);
 
 -- ---------------------------------------------------------------
--- Customers
+-- Price lists (named tiers — each customer is attached to one)
 -- ---------------------------------------------------------------
-INSERT INTO customers (id, code, name, gstin, phone, email, address, active) VALUES
-  (1, 'C001', 'Aakar Industries',     '27AAACA1234A1Z5', '+91 98765 11111', 'orders@aakar.example',   'Plot 14, MIDC Bhosari, Pune',         1),
-  (2, 'C002', 'Bharat Castings',      '27BBBCB5678B1Z5', '+91 98765 22222', 'sales@bharatcast.example','GIDC Vatva, Ahmedabad',              1),
-  (3, 'C003', 'Crescent Engineering', '29CCCDC4321C1Z5', '+91 98765 33333', 'buy@crescenteng.example','Peenya Industrial Area, Bengaluru',  1),
-  (4, 'C004', 'Deccan Steel Works',   '36DDDDE9999D1Z5', '+91 98765 44444', 'po@deccansteel.example', 'Jeedimetla, Hyderabad',              1);
+INSERT INTO price_lists (id, name, description, active) VALUES
+  (1, 'MRP',               'Sticker / MRP — no discount',       1),
+  (2, '10% Off',            'Standard wholesale tier',          1),
+  (3, '20% Off',            'Volume / preferred customer tier', 1),
+  (4, 'Registered Vendor',  'Long-term contracted vendors',     1);
+
+-- ---------------------------------------------------------------
+-- Customers (each pinned to a price list)
+-- ---------------------------------------------------------------
+INSERT INTO customers (id, code, name, gstin, phone, email, address, active, price_list_id) VALUES
+  (1, 'C001', 'Aakar Industries',     '27AAACA1234A1Z5', '+91 98765 11111', 'orders@aakar.example',   'Plot 14, MIDC Bhosari, Pune',         1, 2),
+  (2, 'C002', 'Bharat Castings',      '27BBBCB5678B1Z5', '+91 98765 22222', 'sales@bharatcast.example','GIDC Vatva, Ahmedabad',              1, 3),
+  (3, 'C003', 'Crescent Engineering', '29CCCDC4321C1Z5', '+91 98765 33333', 'buy@crescenteng.example','Peenya Industrial Area, Bengaluru',  1, 4),
+  (4, 'C004', 'Deccan Steel Works',   '36DDDDE9999D1Z5', '+91 98765 44444', 'po@deccansteel.example', 'Jeedimetla, Hyderabad',              1, 1);
 
 -- ---------------------------------------------------------------
 -- Raw materials (sellable, with sale_price)
@@ -58,15 +67,25 @@ INSERT INTO bom (product_id, raw_material_id, qty_per_unit) VALUES
   (4, 1, 0.4000);  -- P04 needs 0.4 kg Steel Bar
 
 -- ---------------------------------------------------------------
--- Customer-specific prices (unified across RM and FG)
---   item_kind = 'FG' -> products.id, 'RM' -> raw_materials.id
+-- Price list items (per-list, per-item prices)
+--   List 1 MRP            = same as default sticker
+--   List 2 10% Off        = 10% discount off MRP/base
+--   List 3 20% Off        = 20% discount off MRP/base
+--   List 4 Registered Vnd = bespoke negotiated prices
 -- ---------------------------------------------------------------
-INSERT INTO customer_prices (customer_id, item_kind, item_id, price) VALUES
-  (1, 'FG', 1,  820.00),  -- Aakar gets P01 cheaper
-  (1, 'RM', 1,   72.00),  -- Aakar gets RM01 cheaper
-  (2, 'FG', 2, 1150.00),  -- Bharat gets P02 cheaper
-  (2, 'FG', 3,  620.00),  -- Bharat gets P03 cheaper
-  (3, 'RM', 3,  132.00);  -- Crescent gets RM03 cheaper
+INSERT INTO price_list_items (price_list_id, item_kind, item_id, price) VALUES
+  -- List 1: MRP = base/sale prices verbatim
+  (1, 'FG', 1,  850.00), (1, 'FG', 2, 1200.00), (1, 'FG', 3,  650.00), (1, 'FG', 4, 1450.00),
+  (1, 'RM', 1,   75.00), (1, 'RM', 2,  220.00), (1, 'RM', 3,  140.00), (1, 'RM', 4,   90.00), (1, 'RM', 5,    4.00),
+  -- List 2: 10% Off
+  (2, 'FG', 1,  765.00), (2, 'FG', 2, 1080.00), (2, 'FG', 3,  585.00), (2, 'FG', 4, 1305.00),
+  (2, 'RM', 1,   67.50), (2, 'RM', 2,  198.00), (2, 'RM', 3,  126.00), (2, 'RM', 4,   81.00), (2, 'RM', 5,    3.60),
+  -- List 3: 20% Off
+  (3, 'FG', 1,  680.00), (3, 'FG', 2,  960.00), (3, 'FG', 3,  520.00), (3, 'FG', 4, 1160.00),
+  (3, 'RM', 1,   60.00), (3, 'RM', 2,  176.00), (3, 'RM', 3,  112.00), (3, 'RM', 4,   72.00), (3, 'RM', 5,    3.20),
+  -- List 4: Registered Vendor (bespoke; not all items listed — missing ones fall back to default)
+  (4, 'FG', 1,  640.00), (4, 'FG', 2,  900.00),
+  (4, 'RM', 1,   55.00), (4, 'RM', 3,  108.00);
 
 -- ---------------------------------------------------------------
 -- Work order (draft, demonstrates flow)
@@ -74,7 +93,8 @@ INSERT INTO customer_prices (customer_id, item_kind, item_id, price) VALUES
 INSERT INTO wo_counters (year, last_seq) VALUES (2026, 1);
 INSERT INTO work_orders (id, wo_number, customer_id, product_id, quantity, unit_price, total_amount, status, notes, created_by, created_at)
 VALUES
-  (1, 'WO-2026-0001', 1, 1, 20.000, 820.00, 16400.00, 'draft', 'First demo work order', 1, '2026-05-10 10:30:00');
+  -- Aakar (List 2 "10% Off"): P01 @ 765.00 each
+  (1, 'WO-2026-0001', 1, 1, 20.000, 765.00, 15300.00, 'draft', 'First demo work order', 1, '2026-05-10 10:30:00');
 
 -- ---------------------------------------------------------------
 -- Sales (auto-numbered) -- stock_qty above already reflects these deductions.
@@ -82,25 +102,25 @@ VALUES
 INSERT INTO sale_counters (year, last_seq) VALUES (2026, 3);
 
 INSERT INTO sales (id, sale_number, customer_id, sale_date, total_amount, notes, created_by, created_at) VALUES
-  (1, 'SALE-2026-0001', 2, '2026-05-12', 12350.00, 'Mixed order: products + fasteners', 1, '2026-05-12 11:15:00'),
-  (2, 'SALE-2026-0002', 3, '2026-05-14',  8475.00, 'Cash & carry RM order',             2, '2026-05-14 09:40:00'),
-  (3, 'SALE-2026-0003', 1, '2026-05-17',  7440.00, 'Repeat customer',                   1, '2026-05-17 16:05:00');
+  (1, 'SALE-2026-0001', 2, '2026-05-12', 10320.00, 'Mixed order: products + fasteners', 1, '2026-05-12 11:15:00'),
+  (2, 'SALE-2026-0002', 3, '2026-05-14',  6775.00, 'Cash & carry RM order',             2, '2026-05-14 09:40:00'),
+  (3, 'SALE-2026-0003', 1, '2026-05-17',  6912.00, 'Repeat customer',                   1, '2026-05-17 16:05:00');
 
--- Sale 1: Bharat -> P02 x5, P03 x10, RM05 x100
+-- Sale 1: Bharat (List 3 "20% Off") -> P02 x5, P03 x10, RM05 x100
 INSERT INTO sale_items (sale_id, item_kind, item_id, qty, unit_price, line_total) VALUES
-  (1, 'FG', 2,   5.000, 1150.00,  5750.00),
-  (1, 'FG', 3,  10.000,  620.00,  6200.00),
-  (1, 'RM', 5, 100.000,    4.00,   400.00);
+  (1, 'FG', 2,   5.000, 960.00, 4800.00),
+  (1, 'FG', 3,  10.000, 520.00, 5200.00),
+  (1, 'RM', 5, 100.000,   3.20,  320.00);
 
--- Sale 2: Crescent -> RM03 x50, RM01 x25
+-- Sale 2: Crescent (List 4 "Registered Vendor") -> RM03 x50, RM01 x25
 INSERT INTO sale_items (sale_id, item_kind, item_id, qty, unit_price, line_total) VALUES
-  (2, 'RM', 3, 50.000, 132.00, 6600.00),
-  (2, 'RM', 1, 25.000,  75.00, 1875.00);
+  (2, 'RM', 3, 50.000, 108.00, 5400.00),
+  (2, 'RM', 1, 25.000,  55.00, 1375.00);
 
--- Sale 3: Aakar -> P01 x8, RM02 x4
+-- Sale 3: Aakar (List 2 "10% Off") -> P01 x8, RM02 x4
 INSERT INTO sale_items (sale_id, item_kind, item_id, qty, unit_price, line_total) VALUES
-  (3, 'FG', 1,  8.000, 820.00, 6560.00),
-  (3, 'RM', 2,  4.000, 220.00,  880.00);
+  (3, 'FG', 1,  8.000, 765.00, 6120.00),
+  (3, 'RM', 2,  4.000, 198.00,  792.00);
 
 -- ---------------------------------------------------------------
 -- Stock movement history (matches the seeded stock_qty values).

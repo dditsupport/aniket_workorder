@@ -9,7 +9,8 @@ shared hosting (MilesWeb / cPanel).
 
 ## Features
 - Multi-user login with roles: `admin` / `operator` / `viewer`.
-- Masters: Customers, Raw Materials (sellable, with sale price), Products (Final, sellable), BOM, unified Customer-wise Price List (covers both RM and Products).
+- Masters: Customers (each attached to one named Price List), Raw Materials (sellable, with sale price), Products (Final, sellable), BOM.
+- Price Lists: named tiers ("10% Off", "Registered Vendor", etc.). One row per list in `price_lists`, one row per (list, item) in `price_list_items` — no new column per tier, just more rows. Items not listed fall back to the item's default sale price.
 - Work Orders with auto-generated number `WO-YYYY-NNNN`.
 - Sales: multi-line bills mixing Products and Raw Materials, auto number `SALE-YYYY-NNNN`, immediate stock-out on save.
 - Workflow: **Draft → In Progress → Completed → Cancelled**.
@@ -86,6 +87,17 @@ mysql -u <user> -p <db> < sql/migration_2_add_sales.sql
 
 This adds the Sales module, RM sale price, and generalises the customer
 price list to cover both RM and products without losing existing data.
+
+For v2 -> v3 (named price lists attached to customers), also run:
+
+```bash
+mysql -u <user> -p <db> < sql/migration_3_price_lists.sql
+```
+
+This drops the old per-customer `customer_prices` override table and
+introduces `price_lists` + `price_list_items` with a `customers.price_list_id`
+FK. Existing customer rows survive with `price_list_id = NULL` (they fall
+back to default prices until you attach them to a list).
 
 ## Notes / Defaults
 - Default admin: `admin` / `admin123` — change immediately.

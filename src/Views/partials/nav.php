@@ -22,7 +22,7 @@ $role = $u['role'] ?? '';
             <li><a class="dropdown-item" href="<?= Helpers::esc(Helpers::url('/customers')) ?>">Customers</a></li>
             <li><a class="dropdown-item" href="<?= Helpers::esc(Helpers::url('/raw-materials')) ?>">Raw Materials</a></li>
             <li><a class="dropdown-item" href="<?= Helpers::esc(Helpers::url('/products')) ?>">Products (Final)</a></li>
-            <li><a class="dropdown-item" href="<?= Helpers::esc(Helpers::url('/price-list')) ?>">Customer Price List</a></li>
+            <li><a class="dropdown-item" href="<?= Helpers::esc(Helpers::url('/price-lists')) ?>">Price Lists</a></li>
           </ul>
         </li>
         <li class="nav-item dropdown">

@@ -239,8 +239,16 @@ final class SaleController
 
     private static function resolvePrice(PDO $db, int $cid, string $kind, int $iid, float $fallback): float
     {
-        $stmt = $db->prepare("SELECT price FROM customer_prices WHERE customer_id=? AND item_kind=? AND item_id=?");
-        $stmt->execute([$cid, $kind, $iid]);
+        $stmt = $db->prepare(
+            "SELECT pli.price
+             FROM customers c
+             JOIN price_list_items pli
+               ON pli.price_list_id = c.price_list_id
+              AND pli.item_kind = ?
+              AND pli.item_id = ?
+             WHERE c.id = ?"
+        );
+        $stmt->execute([$kind, $iid, $cid]);
         $p = $stmt->fetchColumn();
         return ($p !== false && $p !== null) ? (float)$p : $fallback;
     }

@@ -11,12 +11,13 @@ DROP TABLE IF EXISTS stock_movements;
 DROP TABLE IF EXISTS wo_rm_allocations;
 DROP TABLE IF EXISTS work_orders;
 DROP TABLE IF EXISTS wo_counters;
-DROP TABLE IF EXISTS customer_prices;
+DROP TABLE IF EXISTS price_list_items;
 DROP TABLE IF EXISTS bom;
 DROP TABLE IF EXISTS products;
 DROP TABLE IF EXISTS raw_materials;
 DROP TABLE IF EXISTS receipts;
 DROP TABLE IF EXISTS customers;
+DROP TABLE IF EXISTS price_lists;
 DROP TABLE IF EXISTS users;
 
 CREATE TABLE users (
@@ -31,18 +32,35 @@ CREATE TABLE users (
     UNIQUE KEY uq_users_username (username)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE customers (
+-- Named price list ("10% off", "Registered Vendor", "MRP", etc.).
+-- A customer is attached to ONE price list; that list provides the
+-- per-(RM|FG) prices the customer sees on Sales and Work Orders.
+CREATE TABLE price_lists (
     id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    code        VARCHAR(30)  NOT NULL,
-    name        VARCHAR(150) NOT NULL,
-    gstin       VARCHAR(20)  NULL,
-    phone       VARCHAR(30)  NULL,
-    email       VARCHAR(120) NULL,
-    address     VARCHAR(500) NULL,
+    name        VARCHAR(100) NOT NULL,
+    description VARCHAR(255) NULL,
     active      TINYINT(1)   NOT NULL DEFAULT 1,
     created_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
-    UNIQUE KEY uq_customers_code (code)
+    UNIQUE KEY uq_price_lists_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE customers (
+    id            INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    code          VARCHAR(30)  NOT NULL,
+    name          VARCHAR(150) NOT NULL,
+    gstin         VARCHAR(20)  NULL,
+    phone         VARCHAR(30)  NULL,
+    email         VARCHAR(120) NULL,
+    address       VARCHAR(500) NULL,
+    active        TINYINT(1)   NOT NULL DEFAULT 1,
+    price_list_id INT UNSIGNED NULL,
+    created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_customers_code (code),
+    KEY idx_customers_pl (price_list_id),
+    CONSTRAINT fk_customers_pl FOREIGN KEY (price_list_id) REFERENCES price_lists(id)
+        ON UPDATE CASCADE ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE raw_materials (
@@ -84,20 +102,20 @@ CREATE TABLE bom (
         ON UPDATE CASCADE ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Unified customer-wise price list: covers both RM and Final products.
+-- Line items inside a price list. One row per (list, kind, item).
 -- item_kind = 'RM' -> item_id references raw_materials.id
 -- item_kind = 'FG' -> item_id references products.id
-CREATE TABLE customer_prices (
-    id           INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    customer_id  INT UNSIGNED NOT NULL,
-    item_kind    ENUM('RM','FG') NOT NULL,
-    item_id      INT UNSIGNED NOT NULL,
-    price        DECIMAL(12,2) NOT NULL,
+CREATE TABLE price_list_items (
+    id            INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    price_list_id INT UNSIGNED NOT NULL,
+    item_kind     ENUM('RM','FG') NOT NULL,
+    item_id       INT UNSIGNED NOT NULL,
+    price         DECIMAL(12,2) NOT NULL,
     PRIMARY KEY (id),
-    UNIQUE KEY uq_cp (customer_id, item_kind, item_id),
-    KEY idx_cp_item (item_kind, item_id),
-    CONSTRAINT fk_cp_customer FOREIGN KEY (customer_id) REFERENCES customers(id)
-        ON UPDATE CASCADE ON DELETE RESTRICT
+    UNIQUE KEY uq_pli (price_list_id, item_kind, item_id),
+    KEY idx_pli_item (item_kind, item_id),
+    CONSTRAINT fk_pli_list FOREIGN KEY (price_list_id) REFERENCES price_lists(id)
+        ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE wo_counters (

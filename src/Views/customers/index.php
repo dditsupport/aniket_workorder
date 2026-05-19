@@ -11,7 +11,7 @@ use App\Helpers;
 </div>
 <div class="card"><div class="card-body p-0">
 <table class="table table-striped mb-0">
-  <thead><tr><th>Code</th><th>Name</th><th>GSTIN</th><th>Phone</th><th>Email</th><th>Status</th><th></th></tr></thead>
+  <thead><tr><th>Code</th><th>Name</th><th>GSTIN</th><th>Phone</th><th>Price List</th><th>Status</th><th></th></tr></thead>
   <tbody>
     <?php foreach ($rows as $r): ?>
       <tr>
@@ -19,7 +19,11 @@ use App\Helpers;
         <td><?= Helpers::esc($r['name']) ?></td>
         <td><?= Helpers::esc($r['gstin']) ?></td>
         <td><?= Helpers::esc($r['phone']) ?></td>
-        <td><?= Helpers::esc($r['email']) ?></td>
+        <td><?php if ($r['price_list_name']): ?>
+          <span class="badge text-bg-info"><?= Helpers::esc($r['price_list_name']) ?></span>
+        <?php else: ?>
+          <span class="text-secondary small">default</span>
+        <?php endif; ?></td>
         <td><?= $r['active'] ? '<span class="badge text-bg-success">Active</span>' : '<span class="badge text-bg-secondary">Inactive</span>' ?></td>
         <td class="text-end">
           <?php if (Auth::can('write')): ?>

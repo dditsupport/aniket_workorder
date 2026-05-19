@@ -19,6 +19,15 @@ $action = $row ? Helpers::url('/customers/' . $row['id']) : Helpers::url('/custo
       <input class="form-control" name="email" type="email" maxlength="120" value="<?= Helpers::esc($row['email'] ?? '') ?>"></div>
     <div class="col-12"><label class="form-label">Address</label>
       <textarea class="form-control" name="address" rows="2" maxlength="500"><?= Helpers::esc($row['address'] ?? '') ?></textarea></div>
+    <div class="col-md-6"><label class="form-label">Price list</label>
+      <select class="form-select" name="price_list_id">
+        <option value="">— none (use default prices) —</option>
+        <?php foreach ($price_lists as $pl): $sel = (int)($row['price_list_id'] ?? 0) === (int)$pl['id']; ?>
+          <option value="<?= (int)$pl['id'] ?>" <?= $sel ? 'selected' : '' ?>><?= Helpers::esc($pl['name']) ?></option>
+        <?php endforeach; ?>
+      </select>
+      <div class="form-text">The list provides this customer's prices for both raw materials and products.</div>
+    </div>
     <div class="col-12 form-check ms-2">
       <input class="form-check-input" type="checkbox" name="active" value="1" id="active"
         <?= (!$row || (int)$row['active'] === 1) ? 'checked' : '' ?>>
