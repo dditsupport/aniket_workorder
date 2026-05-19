@@ -6,9 +6,9 @@ use App\Config;
 use App\Helpers;
 use App\Router;
 
-require __DIR__ . '/../src/Autoload.php';
+require __DIR__ . '/src/Autoload.php';
 
-Config::load(__DIR__ . '/../config.php');
+Config::load(__DIR__ . '/config.php');
 date_default_timezone_set((string)Config::get('timezone', 'UTC'));
 
 if ((string)Config::get('app_env', 'production') === 'development') {

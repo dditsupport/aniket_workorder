@@ -25,11 +25,17 @@ shared hosting (MilesWeb / cPanel).
 
 ## Project layout
 ```
-public/        document root (front controller + .htaccess)
-src/           application code (controllers, views, framework files)
-sql/           schema + seed
-config.sample.php   copy to config.php and edit
+index.php           front controller
+.htaccess           rewrite + access rules (lives next to index.php)
+assets/             public static files (CSS, etc.)
+src/                application code — blocked from web access by .htaccess
+sql/                schema + seed + migrations — blocked from web access
+config.sample.php   copy to config.php and edit (git-ignored)
 ```
+
+The whole repo folder is dropped in as-is. No "public/" subfolder — the
+front controller lives next to `.htaccess`, which blocks `src/`, `sql/`,
+`.git/`, and the config files from direct download.
 
 ## Local development
 
@@ -41,32 +47,33 @@ mysql -u root -p inventory_wo < sql/seed.sql
 
 # 2. config
 cp config.sample.php config.php
-# edit DB credentials and set app_url=http://localhost:8000 and app_env=development
-# also set session_secure_cookie => false for plain HTTP
+# edit DB credentials, set app_url=http://localhost:8000, app_env=development,
+# and session_secure_cookie => false for plain HTTP
 
 # 3. serve
-php -S 127.0.0.1:8000 -t public
+php -S 127.0.0.1:8000
 ```
 
 Open http://127.0.0.1:8000 and sign in with **admin / admin123**.
 **Change this password immediately** from the Users page.
 
-## Deploying to MilesWeb (cPanel)
+## Deploying to cPanel — subdirectory install (e.g. `aromen.biz/aniket`)
 
-1. In cPanel → **MySQL Databases**, create a database and a user, attach the user to the DB with all privileges.
-2. In **phpMyAdmin**, open that DB and import `sql/schema.sql`, then `sql/seed.sql`.
-3. Upload the project files via **File Manager** or FTP.
-   - Easiest: upload everything into `public_html/`.
-     The included root `.htaccess` rewrites all requests into `public/`,
-     and denies access to `src/`, `sql/`, `.git/`, and the config files.
-   - Better (if cPanel allows changing the document root): point the domain/subdomain to the `public/` folder directly.
-4. Copy `config.sample.php` → `config.php` in the project root (NOT inside `public/`) and fill in:
-   - `app_url` = your site URL, no trailing slash (e.g. `https://shop.example.com`)
+1. In cPanel → **MySQL Databases**, create a database + user, attach with all privileges.
+2. In **phpMyAdmin**, import `sql/schema.sql`, then `sql/seed.sql`.
+3. In **File Manager** (or FTP), upload the whole project into
+   `public_html/aniket/` — so you end up with `public_html/aniket/index.php`,
+   `public_html/aniket/.htaccess`, `public_html/aniket/src/`, etc.
+4. Copy `config.sample.php` → `config.php` (still in `public_html/aniket/`) and set:
+   - `app_url`  = `https://aromen.biz/aniket`   (no trailing slash)
    - `db.host`, `db.name`, `db.user`, `db.pass` = the values from step 1
-   - `session_secure_cookie` = `true` (since cPanel sites are usually HTTPS)
+   - `session_secure_cookie` = `true`
    - `app_env` = `production`
-5. Ensure PHP 8.4 is selected in **MultiPHP Manager** for your domain.
-6. Visit the site → log in as **admin / admin123** → go to **Users** and change the password.
+5. In **MultiPHP Manager**, select PHP 8.4 for the domain.
+6. Visit `https://aromen.biz/aniket/` → log in as **admin / admin123** → go to **Users** and change the password.
+
+For a top-level (whole-domain) install: upload to `public_html/` instead and
+set `app_url` to `https://aromen.biz` (no path).
 
 ## Upgrading an existing v1 install
 
