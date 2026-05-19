@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Auth;
+use App\Csv;
 use App\Database;
 use App\Helpers;
 
@@ -108,6 +109,107 @@ final class RawMaterialController
             $db->rollBack();
             Helpers::flash('error', 'Could not adjust stock.');
         }
+        Helpers::redirect('/raw-materials');
+    }
+
+    public static function exportCsv(): void
+    {
+        $rows = Database::pdo()->query(
+            "SELECT code, name, unit, reorder_level, stock_qty, sale_price FROM raw_materials ORDER BY name"
+        )->fetchAll();
+        Csv::download('raw_materials.csv', ['code','name','unit','reorder_level','stock_qty','sale_price'], $rows);
+    }
+
+    public static function importCsv(): void
+    {
+        try {
+            $rows = Csv::parseUpload('file', ['code','name']);
+        } catch (\Throwable $e) {
+            Helpers::flash('error', 'Import failed: ' . $e->getMessage());
+            Helpers::redirect('/raw-materials');
+        }
+        $db = Database::pdo();
+        $ins = $db->prepare("INSERT INTO raw_materials (code,name,unit,reorder_level,stock_qty,sale_price) VALUES (?,?,?,?,?,?)");
+        $upd = $db->prepare("UPDATE raw_materials SET name=?, unit=?, reorder_level=?, sale_price=? WHERE code=?");
+        $sel = $db->prepare("SELECT id, stock_qty FROM raw_materials WHERE code=?");
+        $created = $updated = 0; $errors = [];
+        $db->beginTransaction();
+        try {
+            foreach ($rows as $i => $r) {
+                $code = (string)($r['code'] ?? '');
+                $name = (string)($r['name'] ?? '');
+                if ($code === '' || $name === '') { $errors[] = 'Row ' . ($i + 2) . ': code and name required.'; continue; }
+                $unit = trim((string)($r['unit'] ?? 'pcs')) ?: 'pcs';
+                $reorder = (float)($r['reorder_level'] ?? 0);
+                $stock   = (float)($r['stock_qty']     ?? 0);
+                $price   = (float)($r['sale_price']    ?? 0);
+                $sel->execute([$code]);
+                $existing = $sel->fetch();
+                if ($existing) {
+                    $upd->execute([$name, $unit, $reorder, $price, $code]);
+                    // Stock import does not silently move stock; use Stock Adjust import for that.
+                    $updated++;
+                } else {
+                    $ins->execute([$code, $name, $unit, $reorder, $stock, $price]);
+                    $newId = (int)$db->lastInsertId();
+                    if ($stock > 0) self::movement('RM', $newId, $stock, 0, 'ADJUST', null, 'CSV import opening stock');
+                    $created++;
+                }
+            }
+            $db->commit();
+        } catch (\Throwable $e) {
+            $db->rollBack();
+            Helpers::flash('error', 'Import aborted: ' . $e->getMessage());
+            Helpers::redirect('/raw-materials');
+        }
+        $msg = "Imported: {$created} new, {$updated} updated.";
+        if ($errors) $msg .= ' ' . count($errors) . ' row(s) skipped: ' . implode(' | ', array_slice($errors, 0, 5));
+        Helpers::flash($errors ? 'error' : 'success', $msg);
+        Helpers::redirect('/raw-materials');
+    }
+
+    public static function adjustImportCsv(): void
+    {
+        try {
+            $rows = Csv::parseUpload('file', ['code','delta']);
+        } catch (\Throwable $e) {
+            Helpers::flash('error', 'Import failed: ' . $e->getMessage());
+            Helpers::redirect('/raw-materials');
+        }
+        $db = Database::pdo();
+        $sel = $db->prepare("SELECT id, stock_qty FROM raw_materials WHERE code=?");
+        $upd = $db->prepare("UPDATE raw_materials SET stock_qty = stock_qty + ? WHERE id=?");
+        $applied = 0; $errors = [];
+        $db->beginTransaction();
+        try {
+            foreach ($rows as $i => $r) {
+                $code = (string)($r['code'] ?? '');
+                $delta = (float)($r['delta'] ?? 0);
+                $note = trim((string)($r['note'] ?? '')) ?: 'bulk adjustment';
+                if ($code === '' || $delta == 0.0) {
+                    $errors[] = 'Row ' . ($i + 2) . ': code required and delta non-zero.';
+                    continue;
+                }
+                $sel->execute([$code]);
+                $rm = $sel->fetch();
+                if (!$rm) { $errors[] = 'Row ' . ($i + 2) . ": code '{$code}' not found."; continue; }
+                if ((float)$rm['stock_qty'] + $delta < 0) {
+                    $errors[] = 'Row ' . ($i + 2) . ": '{$code}' would go below zero.";
+                    continue;
+                }
+                $upd->execute([$delta, (int)$rm['id']]);
+                self::movement('RM', (int)$rm['id'], $delta > 0 ? $delta : 0, $delta < 0 ? -$delta : 0, 'ADJUST', null, $note);
+                $applied++;
+            }
+            $db->commit();
+        } catch (\Throwable $e) {
+            $db->rollBack();
+            Helpers::flash('error', 'Import aborted: ' . $e->getMessage());
+            Helpers::redirect('/raw-materials');
+        }
+        $msg = "Adjusted: {$applied} row(s).";
+        if ($errors) $msg .= ' ' . count($errors) . ' skipped: ' . implode(' | ', array_slice($errors, 0, 5));
+        Helpers::flash($errors ? 'error' : 'success', $msg);
         Helpers::redirect('/raw-materials');
     }
 

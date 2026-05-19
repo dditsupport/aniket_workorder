@@ -3,11 +3,122 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Csv;
 use App\Database;
 use App\Helpers;
 
 final class PriceListController
 {
+    public static function exportCsv(): void
+    {
+        $rows = Database::pdo()->query("SELECT name, description, active FROM price_lists ORDER BY name")->fetchAll();
+        Csv::download('price_lists.csv', ['name','description','active'], $rows);
+    }
+
+    public static function importCsv(): void
+    {
+        try {
+            $rows = Csv::parseUpload('file', ['name']);
+        } catch (\Throwable $e) {
+            Helpers::flash('error', 'Import failed: ' . $e->getMessage());
+            Helpers::redirect('/price-lists');
+        }
+        $db = Database::pdo();
+        $ins = $db->prepare("INSERT INTO price_lists (name, description, active) VALUES (?,?,?)");
+        $upd = $db->prepare("UPDATE price_lists SET description=?, active=? WHERE name=?");
+        $sel = $db->prepare("SELECT id FROM price_lists WHERE name=?");
+        $created = $updated = 0; $errors = [];
+        $db->beginTransaction();
+        try {
+            foreach ($rows as $i => $r) {
+                $name = (string)($r['name'] ?? '');
+                if ($name === '') { $errors[] = 'Row ' . ($i + 2) . ': name required.'; continue; }
+                $desc = ($r['description'] ?? '') ?: null;
+                $act  = Csv::bool($r['active'] ?? '1');
+                $sel->execute([$name]);
+                if ($sel->fetch()) { $upd->execute([$desc, $act, $name]); $updated++; }
+                else               { $ins->execute([$name, $desc, $act]); $created++; }
+            }
+            $db->commit();
+        } catch (\Throwable $e) {
+            $db->rollBack();
+            Helpers::flash('error', 'Import aborted: ' . $e->getMessage());
+            Helpers::redirect('/price-lists');
+        }
+        $msg = "Imported: {$created} new, {$updated} updated.";
+        if ($errors) $msg .= ' ' . count($errors) . ' skipped: ' . implode(' | ', array_slice($errors, 0, 5));
+        Helpers::flash($errors ? 'error' : 'success', $msg);
+        Helpers::redirect('/price-lists');
+    }
+
+    /** Per-list items CSV: columns item_kind, item_code, price. */
+    public static function exportItemsCsv(array $p): void
+    {
+        $id = (int)$p['id'];
+        $list = self::find($id);
+        $stmt = Database::pdo()->prepare(
+            "SELECT pli.item_kind,
+                    CASE WHEN pli.item_kind='FG' THEN pr.code ELSE rm.code END AS item_code,
+                    pli.price
+             FROM price_list_items pli
+             LEFT JOIN products pr      ON pli.item_kind='FG' AND pr.id = pli.item_id
+             LEFT JOIN raw_materials rm ON pli.item_kind='RM' AND rm.id = pli.item_id
+             WHERE pli.price_list_id=? ORDER BY pli.item_kind, item_code"
+        );
+        $stmt->execute([$id]);
+        $fname = 'price_list_' . preg_replace('/[^A-Za-z0-9_-]+/', '_', (string)$list['name']) . '.csv';
+        Csv::download($fname, ['item_kind','item_code','price'], $stmt->fetchAll());
+    }
+
+    public static function importItemsCsv(array $p): void
+    {
+        $id = (int)$p['id'];
+        self::find($id);
+        try {
+            $rows = Csv::parseUpload('file', ['item_kind','item_code','price']);
+        } catch (\Throwable $e) {
+            Helpers::flash('error', 'Import failed: ' . $e->getMessage());
+            Helpers::redirect('/price-lists/' . $id);
+        }
+        $db = Database::pdo();
+        // Pre-cache code -> id maps for both kinds.
+        $fg = [];
+        foreach ($db->query("SELECT id, code FROM products")->fetchAll() as $r) $fg[$r['code']] = (int)$r['id'];
+        $rm = [];
+        foreach ($db->query("SELECT id, code FROM raw_materials")->fetchAll() as $r) $rm[$r['code']] = (int)$r['id'];
+
+        $up = $db->prepare(
+            "INSERT INTO price_list_items (price_list_id, item_kind, item_id, price) VALUES (?,?,?,?)
+             ON DUPLICATE KEY UPDATE price = VALUES(price)"
+        );
+        $applied = 0; $errors = [];
+        $db->beginTransaction();
+        try {
+            foreach ($rows as $i => $r) {
+                $kind = strtoupper(trim((string)($r['item_kind'] ?? '')));
+                $code = (string)($r['item_code'] ?? '');
+                $price = (float)($r['price'] ?? -1);
+                if (!in_array($kind, ['RM','FG'], true) || $code === '' || $price < 0) {
+                    $errors[] = 'Row ' . ($i + 2) . ': bad kind/code/price.';
+                    continue;
+                }
+                $iid = $kind === 'FG' ? ($fg[$code] ?? null) : ($rm[$code] ?? null);
+                if (!$iid) { $errors[] = 'Row ' . ($i + 2) . ": {$kind} code '{$code}' not found."; continue; }
+                $up->execute([$id, $kind, $iid, $price]);
+                $applied++;
+            }
+            $db->commit();
+        } catch (\Throwable $e) {
+            $db->rollBack();
+            Helpers::flash('error', 'Import aborted: ' . $e->getMessage());
+            Helpers::redirect('/price-lists/' . $id);
+        }
+        $msg = "Applied {$applied} price(s).";
+        if ($errors) $msg .= ' ' . count($errors) . ' skipped: ' . implode(' | ', array_slice($errors, 0, 5));
+        Helpers::flash($errors ? 'error' : 'success', $msg);
+        Helpers::redirect('/price-lists/' . $id);
+    }
+
     public static function index(): void
     {
         $rows = Database::pdo()->query(

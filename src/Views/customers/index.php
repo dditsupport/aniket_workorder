@@ -5,9 +5,20 @@ use App\Helpers;
 ?>
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h2>Customers</h2>
-  <?php if (Auth::can('write')): ?>
-    <a class="btn btn-primary" href="<?= Helpers::esc(Helpers::url('/customers/new')) ?>">+ New Customer</a>
-  <?php endif; ?>
+  <div class="d-flex gap-2">
+    <?php if (Auth::can('admin')):
+      $csv_export_url = Helpers::url('/customers/export');
+      $csv_import_url = Helpers::url('/customers/import');
+      $csv_modal_id   = 'csvCustomers';
+      $csv_required   = 'code, name';
+      $csv_label      = 'Customers';
+      $csv_extra_help = "Optional columns: gstin, phone, email, address, active (1/0), price_list (name).";
+      include __DIR__ . '/../partials/csv_tools.php';
+    endif; ?>
+    <?php if (Auth::can('write')): ?>
+      <a class="btn btn-primary" href="<?= Helpers::esc(Helpers::url('/customers/new')) ?>">+ New Customer</a>
+    <?php endif; ?>
+  </div>
 </div>
 <div class="card"><div class="card-body p-0">
 <table class="table table-striped mb-0">

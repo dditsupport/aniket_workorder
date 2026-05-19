@@ -3,12 +3,85 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Csv;
 use App\Database;
 use App\Helpers;
 use PDO;
 
 final class CustomerController
 {
+    public static function exportCsv(): void
+    {
+        $rows = Database::pdo()->query(
+            "SELECT c.code, c.name, c.gstin, c.phone, c.email, c.address, c.active,
+                    COALESCE(pl.name, '') AS price_list
+             FROM customers c
+             LEFT JOIN price_lists pl ON pl.id = c.price_list_id
+             ORDER BY c.name"
+        )->fetchAll();
+        Csv::download('customers.csv',
+            ['code','name','gstin','phone','email','address','active','price_list'], $rows);
+    }
+
+    public static function importCsv(): void
+    {
+        try {
+            $rows = Csv::parseUpload('file', ['code','name']);
+        } catch (\Throwable $e) {
+            Helpers::flash('error', 'Import failed: ' . $e->getMessage());
+            Helpers::redirect('/customers');
+        }
+        $db = Database::pdo();
+        $plMap = [];
+        foreach ($db->query("SELECT id, name FROM price_lists")->fetchAll() as $pl) {
+            $plMap[strtolower((string)$pl['name'])] = (int)$pl['id'];
+        }
+        $ins = $db->prepare("INSERT INTO customers (code,name,gstin,phone,email,address,active,price_list_id) VALUES (?,?,?,?,?,?,?,?)");
+        $upd = $db->prepare("UPDATE customers SET name=?, gstin=?, phone=?, email=?, address=?, active=?, price_list_id=? WHERE code=?");
+        $sel = $db->prepare("SELECT id FROM customers WHERE code=?");
+        $created = $updated = 0; $errors = [];
+        $db->beginTransaction();
+        try {
+            foreach ($rows as $i => $r) {
+                $code = (string)($r['code'] ?? '');
+                $name = (string)($r['name'] ?? '');
+                if ($code === '' || $name === '') { $errors[] = 'Row ' . ($i + 2) . ': code and name required.'; continue; }
+                $plName = strtolower(trim((string)($r['price_list'] ?? '')));
+                $plId = $plName === '' ? null : ($plMap[$plName] ?? null);
+                if ($plName !== '' && $plId === null) {
+                    $errors[] = 'Row ' . ($i + 2) . ": price_list '{$r['price_list']}' not found.";
+                    continue;
+                }
+                $args = [
+                    $name,
+                    ($r['gstin']   ?? '') ?: null,
+                    ($r['phone']   ?? '') ?: null,
+                    ($r['email']   ?? '') ?: null,
+                    ($r['address'] ?? '') ?: null,
+                    Csv::bool($r['active'] ?? '1'),
+                    $plId,
+                ];
+                $sel->execute([$code]);
+                if ($sel->fetch()) {
+                    $upd->execute([...$args, $code]);
+                    $updated++;
+                } else {
+                    $ins->execute([$code, ...$args]);
+                    $created++;
+                }
+            }
+            $db->commit();
+        } catch (\Throwable $e) {
+            $db->rollBack();
+            Helpers::flash('error', 'Import aborted: ' . $e->getMessage());
+            Helpers::redirect('/customers');
+        }
+        $msg = "Imported: {$created} new, {$updated} updated.";
+        if ($errors) $msg .= ' ' . count($errors) . ' skipped: ' . implode(' | ', array_slice($errors, 0, 5));
+        Helpers::flash($errors ? 'error' : 'success', $msg);
+        Helpers::redirect('/customers');
+    }
+
     public static function index(): void
     {
         $rows = Database::pdo()->query(

@@ -5,9 +5,19 @@ use App\Helpers;
 ?>
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h2>Products (Final)</h2>
-  <?php if (Auth::can('admin')): ?>
+  <div class="d-flex gap-2">
+    <?php if (Auth::can('admin')):
+      $csv_export_url = Helpers::url('/products/export');
+      $csv_import_url = Helpers::url('/products/import');
+      $csv_modal_id   = 'csvProducts';
+      $csv_required   = 'code, name';
+      $csv_label      = 'Products';
+      $csv_extra_help = "Optional: unit, base_price, stock_qty (only used for NEW rows; existing rows keep their stock).";
+      include __DIR__ . '/../partials/csv_tools.php';
+    ?>
     <a class="btn btn-primary" href="<?= Helpers::esc(Helpers::url('/products/new')) ?>">+ New Product</a>
-  <?php endif; ?>
+    <?php endif; ?>
+  </div>
 </div>
 <div class="card"><div class="card-body p-0">
 <table class="table table-striped mb-0">

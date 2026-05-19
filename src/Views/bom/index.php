@@ -5,7 +5,18 @@ use App\Helpers;
 ?>
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h2>BOM &mdash; <?= Helpers::esc($product['name']) ?> <small class="text-secondary">(<?= Helpers::esc($product['code']) ?>)</small></h2>
-  <a class="btn btn-link" href="<?= Helpers::esc(Helpers::url('/products')) ?>">&larr; Products</a>
+  <div class="d-flex gap-2 align-items-center">
+    <?php if (Auth::can('admin')):
+      $csv_export_url = Helpers::url('/products/' . $product['id'] . '/bom/export');
+      $csv_import_url = Helpers::url('/products/' . $product['id'] . '/bom/import');
+      $csv_modal_id   = 'csvBOM';
+      $csv_required   = 'rm_code, qty_per_unit';
+      $csv_label      = 'BOM';
+      $csv_extra_help = "rm_code is the raw material's master code. Positive qty only. Upserts by rm_code.";
+      include __DIR__ . '/../partials/csv_tools.php';
+    endif; ?>
+    <a class="btn btn-link" href="<?= Helpers::esc(Helpers::url('/products')) ?>">&larr; Products</a>
+  </div>
 </div>
 
 <div class="row g-3">

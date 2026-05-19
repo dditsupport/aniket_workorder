@@ -3,11 +3,65 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Csv;
 use App\Database;
 use App\Helpers;
 
 final class ProductController
 {
+    public static function exportCsv(): void
+    {
+        $rows = Database::pdo()->query(
+            "SELECT code, name, unit, base_price, stock_qty FROM products ORDER BY name"
+        )->fetchAll();
+        Csv::download('products.csv', ['code','name','unit','base_price','stock_qty'], $rows);
+    }
+
+    public static function importCsv(): void
+    {
+        try {
+            $rows = Csv::parseUpload('file', ['code','name']);
+        } catch (\Throwable $e) {
+            Helpers::flash('error', 'Import failed: ' . $e->getMessage());
+            Helpers::redirect('/products');
+        }
+        $db = Database::pdo();
+        $ins = $db->prepare("INSERT INTO products (code,name,unit,base_price,stock_qty) VALUES (?,?,?,?,?)");
+        $upd = $db->prepare("UPDATE products SET name=?, unit=?, base_price=? WHERE code=?");
+        $sel = $db->prepare("SELECT id FROM products WHERE code=?");
+        $created = $updated = 0; $errors = [];
+        $db->beginTransaction();
+        try {
+            foreach ($rows as $i => $r) {
+                $code = (string)($r['code'] ?? '');
+                $name = (string)($r['name'] ?? '');
+                if ($code === '' || $name === '') { $errors[] = 'Row ' . ($i + 2) . ': code and name required.'; continue; }
+                $unit = trim((string)($r['unit'] ?? 'pcs')) ?: 'pcs';
+                $base = (float)($r['base_price'] ?? 0);
+                $stock = (float)($r['stock_qty']  ?? 0);
+                $sel->execute([$code]);
+                if ($sel->fetch()) {
+                    $upd->execute([$name, $unit, $base, $code]);
+                    $updated++;
+                } else {
+                    $ins->execute([$code, $name, $unit, $base, $stock]);
+                    $newId = (int)$db->lastInsertId();
+                    if ($stock > 0) RawMaterialController::movement('FG', $newId, $stock, 0, 'ADJUST', null, 'CSV import opening stock');
+                    $created++;
+                }
+            }
+            $db->commit();
+        } catch (\Throwable $e) {
+            $db->rollBack();
+            Helpers::flash('error', 'Import aborted: ' . $e->getMessage());
+            Helpers::redirect('/products');
+        }
+        $msg = "Imported: {$created} new, {$updated} updated.";
+        if ($errors) $msg .= ' ' . count($errors) . ' row(s) skipped: ' . implode(' | ', array_slice($errors, 0, 5));
+        Helpers::flash($errors ? 'error' : 'success', $msg);
+        Helpers::redirect('/products');
+    }
+
     public static function index(): void
     {
         $rows = Database::pdo()->query(

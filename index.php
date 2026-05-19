@@ -32,6 +32,8 @@ $router->get('/',          [\App\Controllers\DashboardController::class, 'index'
 $router->get('/dashboard', [\App\Controllers\DashboardController::class, 'index']);
 
 // Customers
+$router->get('/customers/export',     [\App\Controllers\CustomerController::class, 'exportCsv'], 'admin');
+$router->post('/customers/import',    [\App\Controllers\CustomerController::class, 'importCsv'], 'admin');
 $router->get('/customers',            [\App\Controllers\CustomerController::class, 'index']);
 $router->get('/customers/new',        [\App\Controllers\CustomerController::class, 'create'], 'write');
 $router->post('/customers',           [\App\Controllers\CustomerController::class, 'store'],  'write');
@@ -40,6 +42,9 @@ $router->post('/customers/{id}',      [\App\Controllers\CustomerController::clas
 $router->post('/customers/{id}/delete',[\App\Controllers\CustomerController::class, 'destroy'],'admin');
 
 // Raw materials  (admin-only — masters)
+$router->get('/raw-materials/export',           [\App\Controllers\RawMaterialController::class, 'exportCsv'],         'admin');
+$router->post('/raw-materials/import',          [\App\Controllers\RawMaterialController::class, 'importCsv'],         'admin');
+$router->post('/raw-materials/adjust-import',   [\App\Controllers\RawMaterialController::class, 'adjustImportCsv'],   'admin');
 $router->get('/raw-materials',             [\App\Controllers\RawMaterialController::class, 'index'],   'admin');
 $router->get('/raw-materials/new',         [\App\Controllers\RawMaterialController::class, 'create'],  'admin');
 $router->post('/raw-materials',            [\App\Controllers\RawMaterialController::class, 'store'],   'admin');
@@ -49,6 +54,8 @@ $router->post('/raw-materials/{id}/delete',[\App\Controllers\RawMaterialControll
 $router->post('/raw-materials/{id}/adjust',[\App\Controllers\RawMaterialController::class, 'adjust'],  'admin');
 
 // Products (final)  (admin-only — masters)
+$router->get('/products/export',      [\App\Controllers\ProductController::class, 'exportCsv'], 'admin');
+$router->post('/products/import',     [\App\Controllers\ProductController::class, 'importCsv'], 'admin');
 $router->get('/products',             [\App\Controllers\ProductController::class, 'index'],   'admin');
 $router->get('/products/new',         [\App\Controllers\ProductController::class, 'create'],  'admin');
 $router->post('/products',            [\App\Controllers\ProductController::class, 'store'],   'admin');
@@ -60,9 +67,13 @@ $router->post('/products/{id}/delete',[\App\Controllers\ProductController::class
 $router->get('/products/{id}/bom',                 [\App\Controllers\BomController::class, 'index'],   'admin');
 $router->post('/products/{id}/bom',                [\App\Controllers\BomController::class, 'store'],   'admin');
 $router->post('/products/{id}/bom/{bid}/delete',   [\App\Controllers\BomController::class, 'destroy'], 'admin');
+$router->get('/products/{id}/bom/export',          [\App\Controllers\BomController::class, 'exportCsv'], 'admin');
+$router->post('/products/{id}/bom/import',         [\App\Controllers\BomController::class, 'importCsv'], 'admin');
 
 // Price lists (named tiers; each customer attaches to one).
 // Admin-only end-to-end: view, create, edit, delete, item management.
+$router->get('/price-lists/export',                   [\App\Controllers\PriceListController::class, 'exportCsv'],   'admin');
+$router->post('/price-lists/import',                  [\App\Controllers\PriceListController::class, 'importCsv'],   'admin');
 $router->get('/price-lists',                          [\App\Controllers\PriceListController::class, 'index'],       'admin');
 $router->get('/price-lists/new',                      [\App\Controllers\PriceListController::class, 'create'],      'admin');
 $router->post('/price-lists',                         [\App\Controllers\PriceListController::class, 'store'],       'admin');
@@ -70,6 +81,8 @@ $router->get('/price-lists/{id}',                     [\App\Controllers\PriceLis
 $router->get('/price-lists/{id}/edit',                [\App\Controllers\PriceListController::class, 'edit'],        'admin');
 $router->post('/price-lists/{id}',                    [\App\Controllers\PriceListController::class, 'update'],      'admin');
 $router->post('/price-lists/{id}/delete',             [\App\Controllers\PriceListController::class, 'destroy'],     'admin');
+$router->get('/price-lists/{id}/items/export',        [\App\Controllers\PriceListController::class, 'exportItemsCsv'], 'admin');
+$router->post('/price-lists/{id}/items/import',       [\App\Controllers\PriceListController::class, 'importItemsCsv'], 'admin');
 $router->post('/price-lists/{id}/items',              [\App\Controllers\PriceListController::class, 'upsertItem'],   'admin');
 $router->post('/price-lists/{id}/items/{lid}',        [\App\Controllers\PriceListController::class, 'updateItem'],  'admin');
 $router->post('/price-lists/{id}/items/{lid}/delete', [\App\Controllers\PriceListController::class, 'destroyItem'],'admin');

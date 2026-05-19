@@ -10,7 +10,18 @@ use App\Helpers;
     </h2>
     <?php if ($list['description']): ?><small class="text-secondary"><?= Helpers::esc($list['description']) ?></small><?php endif; ?>
   </div>
-  <a class="btn btn-link btn-sm" href="<?= Helpers::esc(Helpers::url('/price-lists')) ?>">&larr; All Lists</a>
+  <div class="d-flex gap-2 align-items-center">
+    <?php if (Auth::can('admin')):
+      $csv_export_url = Helpers::url('/price-lists/' . $list['id'] . '/items/export');
+      $csv_import_url = Helpers::url('/price-lists/' . $list['id'] . '/items/import');
+      $csv_modal_id   = 'csvPLItems';
+      $csv_required   = 'item_kind, item_code, price';
+      $csv_label      = 'Price List Items';
+      $csv_extra_help = "item_kind is RM or FG. item_code is the master code. Upserts by (item_kind, item_code).";
+      include __DIR__ . '/../partials/csv_tools.php';
+    endif; ?>
+    <a class="btn btn-link btn-sm" href="<?= Helpers::esc(Helpers::url('/price-lists')) ?>">&larr; All Lists</a>
+  </div>
 </div>
 
 <?php if (Auth::can('admin')): ?>

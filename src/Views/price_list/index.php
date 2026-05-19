@@ -5,9 +5,19 @@ use App\Helpers;
 ?>
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h2>Price Lists</h2>
-  <?php if (Auth::can('admin')): ?>
+  <div class="d-flex gap-2">
+    <?php if (Auth::can('admin')):
+      $csv_export_url = Helpers::url('/price-lists/export');
+      $csv_import_url = Helpers::url('/price-lists/import');
+      $csv_modal_id   = 'csvPriceLists';
+      $csv_required   = 'name';
+      $csv_label      = 'Price Lists';
+      $csv_extra_help = "Optional: description, active (1/0). Upserts by name. To import the prices INSIDE a list, open the list and use Export/Import there.";
+      include __DIR__ . '/../partials/csv_tools.php';
+    ?>
     <a class="btn btn-primary" href="<?= Helpers::esc(Helpers::url('/price-lists/new')) ?>">+ New Price List</a>
-  <?php endif; ?>
+    <?php endif; ?>
+  </div>
 </div>
 <p class="text-secondary small">Each customer is attached to one price list (set on the Customer form). The list provides prices for both raw materials and final products. Items not listed fall back to the item's default sale price.</p>
 
