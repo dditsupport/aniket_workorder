@@ -1,0 +1,5 @@
+body { font-size: 0.95rem; }
+.table td, .table th { vertical-align: middle; }
+.low-stock { background: #fff3cd; }
+.text-right { text-align: right; }
+.text-num { text-align: right; font-variant-numeric: tabular-nums; }

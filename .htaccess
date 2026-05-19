@@ -1,0 +1,21 @@
+# Root .htaccess: if the host serves the project from the repo root (not from /public),
+# rewrite everything into the public/ directory so the front controller is reachable.
+
+Options -Indexes
+DirectoryIndex public/index.php
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^$ public/ [L]
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+# Block access to sensitive directories and files at the root
+<FilesMatch "^(config\.php|config\.sample\.php|composer\.(json|lock)|README\.md|\.gitignore|\.env.*)$">
+    Require all denied
+</FilesMatch>
+
+RedirectMatch 403 ^/?\.git(/|$)
+RedirectMatch 403 ^/?src(/|$)
+RedirectMatch 403 ^/?sql(/|$)
