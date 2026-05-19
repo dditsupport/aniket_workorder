@@ -40,7 +40,13 @@ use App\Helpers;
           <?php if ($pending <= 0.005): ?>
             <span class="badge text-bg-success">Paid</span>
           <?php else: ?>
-            <strong class="text-danger"><?= Helpers::esc(Helpers::money($pending)) ?></strong>
+            <?php $receiptUrl = Helpers::url('/receipts/new?customer_id=' . (int)$r['customer_id']
+                . '&sale_id=' . (int)$r['id'] . '&amount=' . number_format($pending, 2, '.', '')); ?>
+            <a href="<?= Helpers::esc($receiptUrl) ?>"
+               class="text-danger fw-bold text-decoration-none"
+               title="Record receipt for this invoice">
+              <?= Helpers::esc(Helpers::money($pending)) ?>
+            </a>
           <?php endif; ?>
         </td>
       </tr>

@@ -54,6 +54,7 @@ final class ReceiptController
             'sales' => $sales,
             'preselect_sale' => (int)Helpers::input('sale_id', 0),
             'preselect_customer' => (int)Helpers::input('customer_id', 0),
+            'preselect_amount' => (float)Helpers::input('amount', 0),
         ]);
     }
 

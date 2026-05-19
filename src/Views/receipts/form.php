@@ -42,7 +42,8 @@ foreach ($sales as $s) {
     <div class="col-md-3"><label class="form-label">Date</label>
       <input class="form-control" type="date" name="receipt_date" value="<?= Helpers::esc(date('Y-m-d')) ?>" required></div>
     <div class="col-md-3"><label class="form-label">Amount</label>
-      <input class="form-control" type="number" step="0.01" min="0.01" name="amount" id="rc_amount" required></div>
+      <input class="form-control" type="number" step="0.01" min="0.01" name="amount" id="rc_amount"
+             value="<?= ($preselect_amount ?? 0) > 0 ? Helpers::esc(number_format((float)$preselect_amount, 2, '.', '')) : '' ?>" required></div>
     <div class="col-md-3"><label class="form-label">Mode</label>
       <select class="form-select" name="mode">
         <option value="cash">Cash</option>
