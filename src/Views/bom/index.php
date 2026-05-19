@@ -21,7 +21,7 @@ use App\Helpers;
             <td class="text-num"><?= Helpers::esc(Helpers::qty($r['qty_per_unit'])) ?></td>
             <td><?= Helpers::esc($r['unit']) ?></td>
             <td class="text-end">
-              <?php if (Auth::can('write')): ?>
+              <?php if (Auth::can('admin')): ?>
               <form method="post" action="<?= Helpers::esc(Helpers::url('/products/' . $product['id'] . '/bom/' . $r['id'] . '/delete')) ?>" class="d-inline" onsubmit="return confirm('Remove this BOM line?')">
                 <?= Csrf::field() ?>
                 <button class="btn btn-sm btn-outline-danger">Remove</button>
@@ -36,7 +36,7 @@ use App\Helpers;
     </div></div>
   </div>
 
-  <?php if (Auth::can('write')): ?>
+  <?php if (Auth::can('admin')): ?>
   <div class="col-md-5">
     <div class="card"><div class="card-body">
       <h5>Add / Update line</h5>

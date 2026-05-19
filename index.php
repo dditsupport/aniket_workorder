@@ -39,27 +39,27 @@ $router->get('/customers/{id}/edit',  [\App\Controllers\CustomerController::clas
 $router->post('/customers/{id}',      [\App\Controllers\CustomerController::class, 'update'], 'write');
 $router->post('/customers/{id}/delete',[\App\Controllers\CustomerController::class, 'destroy'],'admin');
 
-// Raw materials
-$router->get('/raw-materials',             [\App\Controllers\RawMaterialController::class, 'index']);
-$router->get('/raw-materials/new',         [\App\Controllers\RawMaterialController::class, 'create'], 'write');
-$router->post('/raw-materials',            [\App\Controllers\RawMaterialController::class, 'store'],  'write');
-$router->get('/raw-materials/{id}/edit',   [\App\Controllers\RawMaterialController::class, 'edit'],   'write');
-$router->post('/raw-materials/{id}',       [\App\Controllers\RawMaterialController::class, 'update'], 'write');
-$router->post('/raw-materials/{id}/delete',[\App\Controllers\RawMaterialController::class, 'destroy'],'admin');
-$router->post('/raw-materials/{id}/adjust',[\App\Controllers\RawMaterialController::class, 'adjust'], 'write');
+// Raw materials  (admin-only — masters)
+$router->get('/raw-materials',             [\App\Controllers\RawMaterialController::class, 'index'],   'admin');
+$router->get('/raw-materials/new',         [\App\Controllers\RawMaterialController::class, 'create'],  'admin');
+$router->post('/raw-materials',            [\App\Controllers\RawMaterialController::class, 'store'],   'admin');
+$router->get('/raw-materials/{id}/edit',   [\App\Controllers\RawMaterialController::class, 'edit'],    'admin');
+$router->post('/raw-materials/{id}',       [\App\Controllers\RawMaterialController::class, 'update'],  'admin');
+$router->post('/raw-materials/{id}/delete',[\App\Controllers\RawMaterialController::class, 'destroy'], 'admin');
+$router->post('/raw-materials/{id}/adjust',[\App\Controllers\RawMaterialController::class, 'adjust'],  'admin');
 
-// Products
-$router->get('/products',             [\App\Controllers\ProductController::class, 'index']);
-$router->get('/products/new',         [\App\Controllers\ProductController::class, 'create'], 'write');
-$router->post('/products',            [\App\Controllers\ProductController::class, 'store'],  'write');
-$router->get('/products/{id}/edit',   [\App\Controllers\ProductController::class, 'edit'],   'write');
-$router->post('/products/{id}',       [\App\Controllers\ProductController::class, 'update'], 'write');
-$router->post('/products/{id}/delete',[\App\Controllers\ProductController::class, 'destroy'],'admin');
+// Products (final)  (admin-only — masters)
+$router->get('/products',             [\App\Controllers\ProductController::class, 'index'],   'admin');
+$router->get('/products/new',         [\App\Controllers\ProductController::class, 'create'],  'admin');
+$router->post('/products',            [\App\Controllers\ProductController::class, 'store'],   'admin');
+$router->get('/products/{id}/edit',   [\App\Controllers\ProductController::class, 'edit'],    'admin');
+$router->post('/products/{id}',       [\App\Controllers\ProductController::class, 'update'],  'admin');
+$router->post('/products/{id}/delete',[\App\Controllers\ProductController::class, 'destroy'], 'admin');
 
-// BOM (nested under product)
-$router->get('/products/{id}/bom',       [\App\Controllers\BomController::class, 'index']);
-$router->post('/products/{id}/bom',      [\App\Controllers\BomController::class, 'store'],   'write');
-$router->post('/products/{id}/bom/{bid}/delete', [\App\Controllers\BomController::class, 'destroy'], 'write');
+// BOM — part of the product master, admin-only.
+$router->get('/products/{id}/bom',                 [\App\Controllers\BomController::class, 'index'],   'admin');
+$router->post('/products/{id}/bom',                [\App\Controllers\BomController::class, 'store'],   'admin');
+$router->post('/products/{id}/bom/{bid}/delete',   [\App\Controllers\BomController::class, 'destroy'], 'admin');
 
 // Price lists (named tiers; each customer attaches to one).
 // Admin-only end-to-end: view, create, edit, delete, item management.

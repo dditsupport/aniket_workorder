@@ -5,7 +5,7 @@ use App\Helpers;
 ?>
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h2>Raw Materials</h2>
-  <?php if (Auth::can('write')): ?>
+  <?php if (Auth::can('admin')): ?>
     <a class="btn btn-primary" href="<?= Helpers::esc(Helpers::url('/raw-materials/new')) ?>">+ New RM</a>
   <?php endif; ?>
 </div>
@@ -24,7 +24,7 @@ use App\Helpers;
         <td class="text-num"><?= Helpers::esc(Helpers::qty($r['reorder_level'])) ?></td>
         <td class="text-num"><?= Helpers::esc(Helpers::money($r['sale_price'])) ?></td>
         <td class="text-end">
-          <?php if (Auth::can('write')): ?>
+          <?php if (Auth::can('admin')): ?>
             <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#adj<?= (int)$r['id'] ?>">Adjust</button>
             <a class="btn btn-sm btn-outline-secondary" href="<?= Helpers::esc(Helpers::url('/raw-materials/' . $r['id'] . '/edit')) ?>">Edit</a>
           <?php endif; ?>
@@ -42,7 +42,7 @@ use App\Helpers;
 </table>
 </div></div>
 
-<?php if (Auth::can('write')): foreach ($rows as $r): ?>
+<?php if (Auth::can('admin')): foreach ($rows as $r): ?>
 <div class="modal fade" id="adj<?= (int)$r['id'] ?>" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
   <form method="post" action="<?= Helpers::esc(Helpers::url('/raw-materials/' . $r['id'] . '/adjust')) ?>">
     <?= Csrf::field() ?>

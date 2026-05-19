@@ -20,9 +20,9 @@ $role = $u['role'] ?? '';
           <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#">Masters</a>
           <ul class="dropdown-menu">
             <li><a class="dropdown-item" href="<?= Helpers::esc(Helpers::url('/customers')) ?>">Customers</a></li>
-            <li><a class="dropdown-item" href="<?= Helpers::esc(Helpers::url('/raw-materials')) ?>">Raw Materials</a></li>
-            <li><a class="dropdown-item" href="<?= Helpers::esc(Helpers::url('/products')) ?>">Products (Final)</a></li>
             <?php if ($role === 'admin'): ?>
+              <li><a class="dropdown-item" href="<?= Helpers::esc(Helpers::url('/raw-materials')) ?>">Raw Materials</a></li>
+              <li><a class="dropdown-item" href="<?= Helpers::esc(Helpers::url('/products')) ?>">Products (Final)</a></li>
               <li><a class="dropdown-item" href="<?= Helpers::esc(Helpers::url('/price-lists')) ?>">Price Lists</a></li>
             <?php endif; ?>
           </ul>

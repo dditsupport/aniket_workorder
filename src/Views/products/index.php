@@ -5,7 +5,7 @@ use App\Helpers;
 ?>
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h2>Products (Final)</h2>
-  <?php if (Auth::can('write')): ?>
+  <?php if (Auth::can('admin')): ?>
     <a class="btn btn-primary" href="<?= Helpers::esc(Helpers::url('/products/new')) ?>">+ New Product</a>
   <?php endif; ?>
 </div>
@@ -22,7 +22,7 @@ use App\Helpers;
         <td class="text-num"><?= Helpers::esc(Helpers::qty($r['stock_qty'])) ?></td>
         <td class="text-end">
           <a class="btn btn-sm btn-outline-info" href="<?= Helpers::esc(Helpers::url('/products/' . $r['id'] . '/bom')) ?>">BOM</a>
-          <?php if (Auth::can('write')): ?>
+          <?php if (Auth::can('admin')): ?>
             <a class="btn btn-sm btn-outline-secondary" href="<?= Helpers::esc(Helpers::url('/products/' . $r['id'] . '/edit')) ?>">Edit</a>
           <?php endif; ?>
           <?php if (Auth::can('admin')): ?>
