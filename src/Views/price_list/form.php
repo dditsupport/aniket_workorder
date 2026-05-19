@@ -3,7 +3,13 @@ use App\Csrf;
 use App\Helpers;
 $action = $row ? Helpers::url('/price-lists/' . $row['id']) : Helpers::url('/price-lists');
 ?>
-<h2><?= $row ? 'Edit Price List' : 'New Price List' ?></h2>
+<h2><?= $row ? 'Rename Price List' : 'New Price List' ?></h2>
+<?php if ($row): ?>
+  <p class="text-secondary">This form only edits the list's <strong>name / description / active</strong>.
+    To add or change item prices, open
+    <a href="<?= Helpers::esc(Helpers::url('/price-lists/' . $row['id'])) ?>">Edit Prices</a>.
+  </p>
+<?php endif; ?>
 <form method="post" action="<?= Helpers::esc($action) ?>" class="card card-body" style="max-width:640px">
   <?= Csrf::field() ?>
   <div class="row g-3">

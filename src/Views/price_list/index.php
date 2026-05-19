@@ -24,7 +24,8 @@ use App\Helpers;
         <td><?= $r['active'] ? '<span class="badge text-bg-success">Active</span>' : '<span class="badge text-bg-secondary">Inactive</span>' ?></td>
         <td class="text-end">
           <?php if (Auth::can('admin')): ?>
-            <a class="btn btn-sm btn-outline-secondary" href="<?= Helpers::esc(Helpers::url('/price-lists/' . $r['id'] . '/edit')) ?>">Edit</a>
+            <a class="btn btn-sm btn-outline-primary" href="<?= Helpers::esc(Helpers::url('/price-lists/' . $r['id'])) ?>">Edit Prices</a>
+            <a class="btn btn-sm btn-outline-secondary" href="<?= Helpers::esc(Helpers::url('/price-lists/' . $r['id'] . '/edit')) ?>">Rename</a>
           <?php endif; ?>
           <?php if (Auth::can('admin')): ?>
             <form method="post" action="<?= Helpers::esc(Helpers::url('/price-lists/' . $r['id'] . '/delete')) ?>" class="d-inline" onsubmit="return confirm('Delete this price list?')">

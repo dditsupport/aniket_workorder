@@ -12,7 +12,7 @@ use App\Helpers;
   </div>
   <div>
     <?php if (Auth::can('admin')): ?>
-      <a class="btn btn-outline-secondary btn-sm" href="<?= Helpers::esc(Helpers::url('/price-lists/' . $list['id'] . '/edit')) ?>">Edit list</a>
+      <a class="btn btn-outline-secondary btn-sm" href="<?= Helpers::esc(Helpers::url('/price-lists/' . $list['id'] . '/edit')) ?>">Rename list</a>
     <?php endif; ?>
     <a class="btn btn-link btn-sm" href="<?= Helpers::esc(Helpers::url('/price-lists')) ?>">&larr; All Lists</a>
   </div>
