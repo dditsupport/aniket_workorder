@@ -8,12 +8,13 @@ use App\Helpers;
   <div class="col-md-8">
     <div class="card"><div class="card-body p-0">
     <table class="table table-striped mb-0">
-      <thead><tr><th>Customer</th><th>Product</th><th class="text-num">Price</th><th class="text-num">Base</th><th></th></tr></thead>
+      <thead><tr><th>Customer</th><th>Kind</th><th>Item</th><th class="text-num">Price</th><th class="text-num">Default</th><th></th></tr></thead>
       <tbody>
         <?php foreach ($rows as $r): ?>
           <tr>
             <td><?= Helpers::esc($r['customer_name']) ?> <small class="text-secondary">(<?= Helpers::esc($r['customer_code']) ?>)</small></td>
-            <td><?= Helpers::esc($r['product_name']) ?> <small class="text-secondary">(<?= Helpers::esc($r['product_code']) ?>)</small></td>
+            <td><span class="badge text-bg-<?= $r['item_kind']==='FG' ? 'success' : 'info' ?>"><?= Helpers::esc($r['item_kind']) ?></span></td>
+            <td><?= Helpers::esc($r['item_name']) ?> <small class="text-secondary">(<?= Helpers::esc($r['item_code']) ?>)</small></td>
             <td class="text-num"><?= Helpers::esc(Helpers::money($r['price'])) ?></td>
             <td class="text-num text-secondary"><?= Helpers::esc(Helpers::money($r['base_price'])) ?></td>
             <td class="text-end">
@@ -26,7 +27,7 @@ use App\Helpers;
             </td>
           </tr>
         <?php endforeach; ?>
-        <?php if (!$rows): ?><tr><td colspan="5" class="text-secondary p-3">No customer-specific prices yet — products use base price.</td></tr><?php endif; ?>
+        <?php if (!$rows): ?><tr><td colspan="6" class="text-secondary p-3">No customer-specific prices yet — items use their default (RM sale price / Product base price).</td></tr><?php endif; ?>
       </tbody>
     </table>
     </div></div>
@@ -43,14 +44,24 @@ use App\Helpers;
             <?php foreach ($customers as $c): ?><option value="<?= (int)$c['id'] ?>"><?= Helpers::esc($c['code'] . ' — ' . $c['name']) ?></option><?php endforeach; ?>
           </select>
         </div>
-        <div class="mb-2"><label class="form-label">Product</label>
-          <select class="form-select" name="product_id" required>
-            <option value="">— select —</option>
-            <?php foreach ($products as $p): ?>
-              <option value="<?= (int)$p['id'] ?>" data-base="<?= Helpers::esc(number_format((float)$p['base_price'],2,'.','')) ?>">
-                <?= Helpers::esc($p['code'] . ' — ' . $p['name']) ?> (base <?= Helpers::esc(Helpers::money($p['base_price'])) ?>)
-              </option>
-            <?php endforeach; ?>
+        <div class="mb-2"><label class="form-label">Item type</label>
+          <select class="form-select" name="item_kind" id="pl_item_kind" required>
+            <option value="FG">Product (Final)</option>
+            <option value="RM">Raw Material</option>
+          </select>
+        </div>
+        <div class="mb-2"><label class="form-label">Item</label>
+          <select class="form-select" name="item_id" id="pl_item_id" required>
+            <optgroup label="Products" data-kind="FG">
+              <?php foreach ($products as $p): ?>
+                <option value="<?= (int)$p['id'] ?>" data-kind="FG"><?= Helpers::esc($p['code'] . ' — ' . $p['name']) ?> (base <?= Helpers::esc(Helpers::money($p['base_price'])) ?>)</option>
+              <?php endforeach; ?>
+            </optgroup>
+            <optgroup label="Raw Materials" data-kind="RM">
+              <?php foreach ($rms as $rm): ?>
+                <option value="<?= (int)$rm['id'] ?>" data-kind="RM" hidden><?= Helpers::esc($rm['code'] . ' — ' . $rm['name']) ?> (sale <?= Helpers::esc(Helpers::money($rm['sale_price'])) ?>)</option>
+              <?php endforeach; ?>
+            </optgroup>
           </select>
         </div>
         <div class="mb-3"><label class="form-label">Price</label>
@@ -61,3 +72,23 @@ use App\Helpers;
   </div>
   <?php endif; ?>
 </div>
+<script>
+(function () {
+  const kindSel = document.getElementById('pl_item_kind');
+  const itemSel = document.getElementById('pl_item_id');
+  if (!kindSel || !itemSel) return;
+  function syncOptions() {
+    const k = kindSel.value;
+    let firstVisible = null;
+    Array.from(itemSel.querySelectorAll('option')).forEach(o => {
+      const ok = o.dataset.kind === k;
+      o.hidden = !ok;
+      o.disabled = !ok;
+      if (ok && firstVisible === null) firstVisible = o;
+    });
+    if (firstVisible) itemSel.value = firstVisible.value;
+  }
+  kindSel.addEventListener('change', syncOptions);
+  syncOptions();
+})();
+</script>

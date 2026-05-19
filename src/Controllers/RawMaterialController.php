@@ -12,7 +12,7 @@ final class RawMaterialController
     public static function index(): void
     {
         $rows = Database::pdo()->query(
-            "SELECT id, code, name, unit, reorder_level, stock_qty FROM raw_materials ORDER BY name"
+            "SELECT id, code, name, unit, reorder_level, stock_qty, sale_price FROM raw_materials ORDER BY name"
         )->fetchAll();
         Helpers::render('raw_materials/index', ['title' => 'Raw Materials', 'rows' => $rows]);
     }
@@ -34,9 +34,9 @@ final class RawMaterialController
         if ($e = self::validate($d)) { Helpers::flash('error', $e); Helpers::redirect('/raw-materials/new'); }
         try {
             $stmt = Database::pdo()->prepare(
-                "INSERT INTO raw_materials (code,name,unit,reorder_level,stock_qty) VALUES (?,?,?,?,?)"
+                "INSERT INTO raw_materials (code,name,unit,reorder_level,stock_qty,sale_price) VALUES (?,?,?,?,?,?)"
             );
-            $stmt->execute([$d['code'], $d['name'], $d['unit'], $d['reorder_level'], $d['stock_qty']]);
+            $stmt->execute([$d['code'], $d['name'], $d['unit'], $d['reorder_level'], $d['stock_qty'], $d['sale_price']]);
             $id = (int)Database::pdo()->lastInsertId();
             if ($d['stock_qty'] > 0) {
                 self::movement('RM', $id, $d['stock_qty'], 0, 'ADJUST', null, 'initial stock');
@@ -58,9 +58,9 @@ final class RawMaterialController
         // On edit, do NOT touch stock_qty directly — use the adjust action.
         try {
             $stmt = Database::pdo()->prepare(
-                "UPDATE raw_materials SET code=?,name=?,unit=?,reorder_level=? WHERE id=?"
+                "UPDATE raw_materials SET code=?,name=?,unit=?,reorder_level=?,sale_price=? WHERE id=?"
             );
-            $stmt->execute([$d['code'], $d['name'], $d['unit'], $d['reorder_level'], $id]);
+            $stmt->execute([$d['code'], $d['name'], $d['unit'], $d['reorder_level'], $d['sale_price'], $id]);
         } catch (\PDOException $e) {
             Helpers::flash('error', 'Could not update: ' . ($e->errorInfo[1] === 1062 ? 'code already exists' : 'database error'));
             Helpers::redirect("/raw-materials/{$id}/edit");
@@ -137,6 +137,7 @@ final class RawMaterialController
             'unit' => trim((string)Helpers::input('unit', 'pcs')),
             'reorder_level' => (float)Helpers::input('reorder_level', 0),
             'stock_qty'     => (float)Helpers::input('stock_qty', 0),
+            'sale_price'    => (float)Helpers::input('sale_price', 0),
         ];
     }
 
@@ -146,6 +147,7 @@ final class RawMaterialController
         if ($d['name'] === '' || strlen($d['name']) > 150) return 'Name is required (max 150).';
         if ($d['unit'] === '' || strlen($d['unit']) > 20) return 'Unit is required (max 20).';
         if ($d['reorder_level'] < 0) return 'Reorder level cannot be negative.';
+        if ($d['sale_price'] < 0) return 'Sale price cannot be negative.';
         if (!$edit && $d['stock_qty'] < 0) return 'Stock qty cannot be negative.';
         return null;
     }

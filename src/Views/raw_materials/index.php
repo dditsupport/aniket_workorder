@@ -11,7 +11,7 @@ use App\Helpers;
 </div>
 <div class="card"><div class="card-body p-0">
 <table class="table table-striped mb-0">
-  <thead><tr><th>Code</th><th>Name</th><th>Unit</th><th class="text-num">Stock</th><th class="text-num">Reorder</th><th></th></tr></thead>
+  <thead><tr><th>Code</th><th>Name</th><th>Unit</th><th class="text-num">Stock</th><th class="text-num">Reorder</th><th class="text-num">Sale price</th><th></th></tr></thead>
   <tbody>
     <?php foreach ($rows as $r):
       $low = ((float)$r['reorder_level'] > 0 && (float)$r['stock_qty'] <= (float)$r['reorder_level']);
@@ -22,6 +22,7 @@ use App\Helpers;
         <td><?= Helpers::esc($r['unit']) ?></td>
         <td class="text-num"><?= Helpers::esc(Helpers::qty($r['stock_qty'])) ?></td>
         <td class="text-num"><?= Helpers::esc(Helpers::qty($r['reorder_level'])) ?></td>
+        <td class="text-num"><?= Helpers::esc(Helpers::money($r['sale_price'])) ?></td>
         <td class="text-end">
           <?php if (Auth::can('write')): ?>
             <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#adj<?= (int)$r['id'] ?>">Adjust</button>
@@ -36,7 +37,7 @@ use App\Helpers;
         </td>
       </tr>
     <?php endforeach; ?>
-    <?php if (!$rows): ?><tr><td colspan="6" class="text-secondary p-3">No raw materials yet.</td></tr><?php endif; ?>
+    <?php if (!$rows): ?><tr><td colspan="7" class="text-secondary p-3">No raw materials yet.</td></tr><?php endif; ?>
   </tbody>
 </table>
 </div></div>

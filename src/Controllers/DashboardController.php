@@ -33,6 +33,7 @@ final class DashboardController
         )->fetchAll();
         $outstanding = (float)$db->query(
             "SELECT COALESCE((SELECT SUM(total_amount) FROM work_orders WHERE status <> 'cancelled'),0)
+                  + COALESCE((SELECT SUM(total_amount) FROM sales),0)
                   - COALESCE((SELECT SUM(amount) FROM receipts),0)"
         )->fetchColumn();
         Helpers::render('dashboard/index', [

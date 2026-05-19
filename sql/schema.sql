@@ -4,6 +4,9 @@
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS=0;
 
+DROP TABLE IF EXISTS sale_items;
+DROP TABLE IF EXISTS sales;
+DROP TABLE IF EXISTS sale_counters;
 DROP TABLE IF EXISTS stock_movements;
 DROP TABLE IF EXISTS wo_rm_allocations;
 DROP TABLE IF EXISTS work_orders;
@@ -49,6 +52,7 @@ CREATE TABLE raw_materials (
     unit            VARCHAR(20)  NOT NULL DEFAULT 'pcs',
     reorder_level   DECIMAL(12,3) NOT NULL DEFAULT 0,
     stock_qty       DECIMAL(12,3) NOT NULL DEFAULT 0,
+    sale_price      DECIMAL(12,2) NOT NULL DEFAULT 0,
     created_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     UNIQUE KEY uq_rm_code (code)
@@ -80,17 +84,19 @@ CREATE TABLE bom (
         ON UPDATE CASCADE ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Unified customer-wise price list: covers both RM and Final products.
+-- item_kind = 'RM' -> item_id references raw_materials.id
+-- item_kind = 'FG' -> item_id references products.id
 CREATE TABLE customer_prices (
     id           INT UNSIGNED NOT NULL AUTO_INCREMENT,
     customer_id  INT UNSIGNED NOT NULL,
-    product_id   INT UNSIGNED NOT NULL,
+    item_kind    ENUM('RM','FG') NOT NULL,
+    item_id      INT UNSIGNED NOT NULL,
     price        DECIMAL(12,2) NOT NULL,
     PRIMARY KEY (id),
-    UNIQUE KEY uq_cp (customer_id, product_id),
-    KEY idx_cp_product (product_id),
+    UNIQUE KEY uq_cp (customer_id, item_kind, item_id),
+    KEY idx_cp_item (item_kind, item_id),
     CONSTRAINT fk_cp_customer FOREIGN KEY (customer_id) REFERENCES customers(id)
-        ON UPDATE CASCADE ON DELETE RESTRICT,
-    CONSTRAINT fk_cp_product FOREIGN KEY (product_id) REFERENCES products(id)
         ON UPDATE CASCADE ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -146,7 +152,7 @@ CREATE TABLE stock_movements (
     item_id     INT UNSIGNED NOT NULL,
     qty_in      DECIMAL(12,3) NOT NULL DEFAULT 0,
     qty_out     DECIMAL(12,3) NOT NULL DEFAULT 0,
-    ref_type    ENUM('WO_RESERVE','WO_RELEASE','WO_CONSUME','WO_PRODUCE','ADJUST') NOT NULL,
+    ref_type    ENUM('WO_RESERVE','WO_RELEASE','WO_CONSUME','WO_PRODUCE','ADJUST','SALE_OUT') NOT NULL,
     ref_id      INT UNSIGNED NULL,
     note        VARCHAR(255) NULL,
     created_by  INT UNSIGNED NOT NULL,
@@ -175,6 +181,47 @@ CREATE TABLE receipts (
         ON UPDATE CASCADE ON DELETE RESTRICT,
     CONSTRAINT fk_receipts_user FOREIGN KEY (created_by) REFERENCES users(id)
         ON UPDATE CASCADE ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE sale_counters (
+    year      INT          NOT NULL,
+    last_seq  INT UNSIGNED NOT NULL DEFAULT 0,
+    PRIMARY KEY (year)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE sales (
+    id            INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    sale_number   VARCHAR(20)  NOT NULL,
+    customer_id   INT UNSIGNED NOT NULL,
+    sale_date     DATE         NOT NULL,
+    total_amount  DECIMAL(14,2) NOT NULL DEFAULT 0,
+    notes         TEXT NULL,
+    created_by    INT UNSIGNED NOT NULL,
+    created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_sale_number (sale_number),
+    KEY idx_sale_customer (customer_id),
+    KEY idx_sale_date (sale_date),
+    CONSTRAINT fk_sale_customer FOREIGN KEY (customer_id) REFERENCES customers(id)
+        ON UPDATE CASCADE ON DELETE RESTRICT,
+    CONSTRAINT fk_sale_user FOREIGN KEY (created_by) REFERENCES users(id)
+        ON UPDATE CASCADE ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- item_kind: 'RM' -> raw_materials.id, 'FG' -> products.id
+CREATE TABLE sale_items (
+    id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    sale_id     INT UNSIGNED NOT NULL,
+    item_kind   ENUM('RM','FG') NOT NULL,
+    item_id     INT UNSIGNED NOT NULL,
+    qty         DECIMAL(12,3) NOT NULL,
+    unit_price  DECIMAL(12,2) NOT NULL DEFAULT 0,
+    line_total  DECIMAL(14,2) NOT NULL DEFAULT 0,
+    PRIMARY KEY (id),
+    KEY idx_si_sale (sale_id),
+    KEY idx_si_item (item_kind, item_id),
+    CONSTRAINT fk_si_sale FOREIGN KEY (sale_id) REFERENCES sales(id)
+        ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 SET FOREIGN_KEY_CHECKS=1;

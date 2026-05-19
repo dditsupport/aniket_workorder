@@ -76,6 +76,14 @@ $router->post('/work-orders/{id}/delete',   [\App\Controllers\WorkOrderControlle
 // AJAX helper for unit-price lookup
 $router->get('/api/price',                  [\App\Controllers\WorkOrderController::class, 'priceLookup']);
 
+// Sales
+$router->get('/sales',                [\App\Controllers\SaleController::class, 'index']);
+$router->get('/sales/new',            [\App\Controllers\SaleController::class, 'create'], 'write');
+$router->post('/sales',               [\App\Controllers\SaleController::class, 'store'],  'write');
+$router->get('/sales/{id}',           [\App\Controllers\SaleController::class, 'show']);
+$router->post('/sales/{id}/delete',   [\App\Controllers\SaleController::class, 'destroy'],'admin');
+$router->get('/api/sale-price',       [\App\Controllers\SaleController::class, 'priceLookup']);
+
 // Receipts
 $router->get('/receipts',              [\App\Controllers\ReceiptController::class, 'index']);
 $router->get('/receipts/new',          [\App\Controllers\ReceiptController::class, 'create'], 'write');

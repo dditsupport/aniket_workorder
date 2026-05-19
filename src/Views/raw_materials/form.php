@@ -15,6 +15,8 @@ $action = $row ? Helpers::url('/raw-materials/' . $row['id']) : Helpers::url('/r
       <input class="form-control" name="unit" required maxlength="20" value="<?= Helpers::esc($row['unit'] ?? 'pcs') ?>"></div>
     <div class="col-md-4"><label class="form-label">Reorder level</label>
       <input class="form-control" type="number" step="0.001" min="0" name="reorder_level" value="<?= Helpers::esc(Helpers::qty($row['reorder_level'] ?? 0)) ?>"></div>
+    <div class="col-md-4"><label class="form-label">Sale price</label>
+      <input class="form-control" type="number" step="0.01" min="0" name="sale_price" value="<?= Helpers::esc(number_format((float)($row['sale_price'] ?? 0), 2, '.', '')) ?>"></div>
     <?php if (!$row): ?>
     <div class="col-md-4"><label class="form-label">Opening stock</label>
       <input class="form-control" type="number" step="0.001" min="0" name="stock_qty" value="0"></div>

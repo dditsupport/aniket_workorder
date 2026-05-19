@@ -9,13 +9,14 @@ shared hosting (MilesWeb / cPanel).
 
 ## Features
 - Multi-user login with roles: `admin` / `operator` / `viewer`.
-- Masters: Customers, Raw Materials, Products (Final), BOM, Customer-wise Price List.
+- Masters: Customers, Raw Materials (sellable, with sale price), Products (Final, sellable), BOM, unified Customer-wise Price List (covers both RM and Products).
 - Work Orders with auto-generated number `WO-YYYY-NNNN`.
+- Sales: multi-line bills mixing Products and Raw Materials, auto number `SALE-YYYY-NNNN`, immediate stock-out on save.
 - Workflow: **Draft → In Progress → Completed → Cancelled**.
   - Moving to **In Progress** reserves & deducts RM stock (per BOM).
   - **Completed** records consumption, increases Final stock.
   - **Cancelled** from In Progress releases RM back to stock.
-- Receipts: simple "amount received" log per customer.
+- Receipts: simple "amount received" log per customer (matched against WO + Sale totals).
 - Reports:
   - RM Stock + low-stock highlight
   - Final Product Stock + stock value at base price
@@ -66,6 +67,18 @@ Open http://127.0.0.1:8000 and sign in with **admin / admin123**.
    - `app_env` = `production`
 5. Ensure PHP 8.4 is selected in **MultiPHP Manager** for your domain.
 6. Visit the site → log in as **admin / admin123** → go to **Users** and change the password.
+
+## Upgrading an existing v1 install
+
+If you already imported the original `sql/schema.sql` and have data, do NOT
+re-import it (it drops tables). Instead apply the migration:
+
+```bash
+mysql -u <user> -p <db> < sql/migration_2_add_sales.sql
+```
+
+This adds the Sales module, RM sale price, and generalises the customer
+price list to cover both RM and products without losing existing data.
 
 ## Notes / Defaults
 - Default admin: `admin` / `admin123` — change immediately.

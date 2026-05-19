@@ -226,7 +226,7 @@ final class WorkOrderController
     private static function resolvePrice(int $cid, int $pid): float
     {
         $db = Database::pdo();
-        $stmt = $db->prepare("SELECT price FROM customer_prices WHERE customer_id=? AND product_id=?");
+        $stmt = $db->prepare("SELECT price FROM customer_prices WHERE customer_id=? AND item_kind='FG' AND item_id=?");
         $stmt->execute([$cid, $pid]);
         $p = $stmt->fetchColumn();
         if ($p !== false && $p !== null) return (float)$p;

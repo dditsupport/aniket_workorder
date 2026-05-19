@@ -14,6 +14,7 @@ $role = $u['role'] ?? '';
     <div class="collapse navbar-collapse" id="nav">
       <ul class="navbar-nav me-auto">
         <li class="nav-item"><a class="nav-link" href="<?= Helpers::esc(Helpers::url('/work-orders')) ?>">Work Orders</a></li>
+        <li class="nav-item"><a class="nav-link" href="<?= Helpers::esc(Helpers::url('/sales')) ?>">Sales</a></li>
         <li class="nav-item"><a class="nav-link" href="<?= Helpers::esc(Helpers::url('/receipts')) ?>">Receipts</a></li>
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#">Masters</a>
