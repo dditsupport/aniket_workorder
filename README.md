@@ -99,6 +99,20 @@ introduces `price_lists` + `price_list_items` with a `customers.price_list_id`
 FK. Existing customer rows survive with `price_list_id = NULL` (they fall
 back to default prices until you attach them to a list).
 
+For v3 -> v4 (plain-text passwords), also run:
+
+```bash
+mysql -u <user> -p <db> < sql/migration_4_plain_text_passwords.sql
+```
+
+This renames `users.password_hash` to `users.password` and resets every
+existing user's password to `admin123`. Sign in and change them on the
+Users page right after import.
+
+**Security note:** v4 onwards stores user passwords in plain text per
+the owner's decision. Anyone with DB or backup access can read every
+user's password. Treat the DB and its backups accordingly.
+
 ## Notes / Defaults
 - Default admin: `admin` / `admin123` — change immediately.
 - WO numbering is per-calendar-year; the counter is stored in `wo_counters`.

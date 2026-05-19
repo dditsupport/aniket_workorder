@@ -36,11 +36,11 @@ final class UserController
         if ($e = self::validate($d, isNew: true)) { Helpers::flash('error', $e); Helpers::redirect('/users/new'); }
         try {
             $stmt = Database::pdo()->prepare(
-                "INSERT INTO users (username, password_hash, name, role, active) VALUES (?,?,?,?,?)"
+                "INSERT INTO users (username, password, name, role, active) VALUES (?,?,?,?,?)"
             );
             $stmt->execute([
                 $d['username'],
-                password_hash($d['password'], PASSWORD_BCRYPT),
+                $d['password'],
                 $d['name'], $d['role'], $d['active'],
             ]);
         } catch (\PDOException $e) {
@@ -60,9 +60,9 @@ final class UserController
         try {
             if ($d['password'] !== '') {
                 $stmt = Database::pdo()->prepare(
-                    "UPDATE users SET username=?, name=?, role=?, active=?, password_hash=? WHERE id=?"
+                    "UPDATE users SET username=?, name=?, role=?, active=?, password=? WHERE id=?"
                 );
-                $stmt->execute([$d['username'], $d['name'], $d['role'], $d['active'], password_hash($d['password'], PASSWORD_BCRYPT), $id]);
+                $stmt->execute([$d['username'], $d['name'], $d['role'], $d['active'], $d['password'], $id]);
             } else {
                 $stmt = Database::pdo()->prepare(
                     "UPDATE users SET username=?, name=?, role=?, active=? WHERE id=?"

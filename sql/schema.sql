@@ -20,14 +20,16 @@ DROP TABLE IF EXISTS customers;
 DROP TABLE IF EXISTS price_lists;
 DROP TABLE IF EXISTS users;
 
+-- NOTE: per owner decision, `password` stores the plain-text password.
+-- No hashing. Anyone with DB access can read every user's password.
 CREATE TABLE users (
-    id             INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    username       VARCHAR(50)  NOT NULL,
-    password_hash  VARCHAR(255) NOT NULL,
-    name           VARCHAR(100) NOT NULL,
-    role           ENUM('admin','operator','viewer') NOT NULL DEFAULT 'viewer',
-    active         TINYINT(1)   NOT NULL DEFAULT 1,
-    created_at     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    username    VARCHAR(50)  NOT NULL,
+    password    VARCHAR(255) NOT NULL,
+    name        VARCHAR(100) NOT NULL,
+    role        ENUM('admin','operator','viewer') NOT NULL DEFAULT 'viewer',
+    active      TINYINT(1)   NOT NULL DEFAULT 1,
+    created_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     UNIQUE KEY uq_users_username (username)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

@@ -17,8 +17,12 @@ $action = $row ? Helpers::url('/users/' . $row['id']) : Helpers::url('/users');
           <option value="<?= Helpers::esc($rl) ?>" <?= ($row['role'] ?? 'viewer') === $rl ? 'selected' : '' ?>><?= Helpers::esc($rl) ?></option>
         <?php endforeach; ?>
       </select></div>
-    <div class="col-md-4"><label class="form-label">Password <?= $row ? '<small class="text-secondary">(leave blank to keep current)</small>' : '' ?></label>
-      <input class="form-control" type="password" name="password" <?= $row ? '' : 'required' ?> minlength="6"></div>
+    <div class="col-md-4"><label class="form-label">Password
+        <?php if ($row): ?>
+          <small class="text-secondary">(current: <code><?= Helpers::esc((string)$row['password']) ?></code>; leave blank to keep)</small>
+        <?php endif; ?>
+      </label>
+      <input class="form-control" type="text" name="password" <?= $row ? '' : 'required' ?> minlength="6" autocomplete="off"></div>
     <div class="col-md-4 form-check ms-2 align-self-end">
       <input class="form-check-input" type="checkbox" name="active" value="1" id="active"
         <?= (!$row || (int)$row['active'] === 1) ? 'checked' : '' ?>>

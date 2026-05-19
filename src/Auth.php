@@ -25,14 +25,16 @@ final class Auth
     public static function attempt(string $username, string $password): bool
     {
         $stmt = Database::pdo()->prepare(
-            "SELECT id, username, password_hash, name, role, active FROM users WHERE username = ? LIMIT 1"
+            "SELECT id, username, password, name, role, active FROM users WHERE username = ? LIMIT 1"
         );
         $stmt->execute([$username]);
         $u = $stmt->fetch();
         if (!$u || (int)$u['active'] !== 1) {
             return false;
         }
-        if (!password_verify($password, $u['password_hash'])) {
+        // Passwords are stored in plain text (per owner decision). Compare with hash_equals
+        // to avoid timing-side-channel leaks at least.
+        if (!hash_equals((string)$u['password'], $password)) {
             return false;
         }
         session_regenerate_id(true);

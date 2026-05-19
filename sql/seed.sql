@@ -10,10 +10,10 @@ SET NAMES utf8mb4;
 -- ---------------------------------------------------------------
 -- Users
 -- ---------------------------------------------------------------
-INSERT INTO users (id, username, password_hash, name, role, active) VALUES
-  (1, 'admin',  '$2y$12$cd4XwHhRz/eetYyhngUaUeiqdNOQo97qz0Mwqzux418z996o2NdoC', 'Administrator', 'admin',  1),
-  -- staff user with same password hash, for demo (password: admin123)
-  (2, 'staff1', '$2y$12$cd4XwHhRz/eetYyhngUaUeiqdNOQo97qz0Mwqzux418z996o2NdoC', 'Ramesh K.',     'operator', 1);
+-- Passwords stored in plain text (per owner decision).
+INSERT INTO users (id, username, password, name, role, active) VALUES
+  (1, 'admin',  'admin123', 'Administrator', 'admin',    1),
+  (2, 'staff1', 'staff123', 'Ramesh K.',     'operator', 1);
 
 -- ---------------------------------------------------------------
 -- Price lists (named tiers — each customer is attached to one)
