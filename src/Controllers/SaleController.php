@@ -21,7 +21,8 @@ final class SaleController
         if ($from !== '') { $where[] = 's.sale_date >= ?'; $args[] = $from; }
         if ($to   !== '') { $where[] = 's.sale_date <= ?'; $args[] = $to; }
         $sql = "SELECT s.*, c.name AS customer_name, c.code AS customer_code,
-                       (SELECT COUNT(*) FROM sale_items si WHERE si.sale_id = s.id) AS line_count
+                       (SELECT COUNT(*) FROM sale_items si WHERE si.sale_id = s.id) AS line_count,
+                       COALESCE((SELECT SUM(r.amount) FROM receipts r WHERE r.sale_id = s.id), 0) AS paid_amount
                 FROM sales s JOIN customers c ON c.id = s.customer_id"
                 . ($where ? ' WHERE ' . implode(' AND ', $where) : '')
                 . " ORDER BY s.id DESC LIMIT 500";
@@ -156,7 +157,8 @@ final class SaleController
         $id = (int)$p['id'];
         $db = Database::pdo();
         $stmt = $db->prepare(
-            "SELECT s.*, c.name AS customer_name, c.code AS customer_code
+            "SELECT s.*, c.name AS customer_name, c.code AS customer_code,
+                    COALESCE((SELECT SUM(r.amount) FROM receipts r WHERE r.sale_id = s.id), 0) AS paid_amount
              FROM sales s JOIN customers c ON c.id = s.customer_id
              WHERE s.id = ?"
         );
@@ -176,10 +178,17 @@ final class SaleController
         );
         $lines->execute([$id]);
 
+        $receipts = $db->prepare(
+            "SELECT id, receipt_date, amount, mode, reference, note
+             FROM receipts WHERE sale_id = ? ORDER BY receipt_date, id"
+        );
+        $receipts->execute([$id]);
+
         Helpers::render('sales/view', [
             'title' => 'Sale ' . $sale['sale_number'],
             'sale' => $sale,
             'lines' => $lines->fetchAll(),
+            'receipts' => $receipts->fetchAll(),
         ]);
     }
 

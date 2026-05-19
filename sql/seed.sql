@@ -151,7 +151,7 @@ INSERT INTO stock_movements (item_type, item_id, qty_in, qty_out, ref_type, ref_
 -- ---------------------------------------------------------------
 -- Receipts (partial collections against customers)
 -- ---------------------------------------------------------------
-INSERT INTO receipts (customer_id, receipt_date, amount, mode, reference, note, created_by) VALUES
-  (1, '2026-05-18',  8000.00, 'upi',    'UPI/REF/8841',   'Part payment vs SALE-2026-0003', 1),
-  (2, '2026-05-15', 12000.00, 'bank',   'NEFT/A12345',    'Part payment vs SALE-2026-0001', 1),
-  (3, '2026-05-16',  5000.00, 'cash',   NULL,             'On account',                    2);
+INSERT INTO receipts (customer_id, sale_id, receipt_date, amount, mode, reference, note, created_by) VALUES
+  (1, 3, '2026-05-18',  6000.00, 'upi',    'UPI/REF/8841',   'Part payment vs SALE-2026-0003', 1),
+  (2, 1, '2026-05-15', 10000.00, 'bank',   'NEFT/A12345',    'Part payment vs SALE-2026-0001', 1),
+  (3, NULL, '2026-05-16', 5000.00, 'cash', NULL,             'On account',                    2);

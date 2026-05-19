@@ -26,12 +26,17 @@ use App\Helpers;
 
 <div class="card"><div class="card-body p-0">
 <table class="table table-striped mb-0">
-  <thead><tr><th>Date</th><th>Customer</th><th class="text-num">Amount</th><th>Mode</th><th>Reference</th><th>Note</th><th></th></tr></thead>
+  <thead><tr><th>Date</th><th>Customer</th><th>Against</th><th class="text-num">Amount</th><th>Mode</th><th>Reference</th><th>Note</th><th></th></tr></thead>
   <tbody>
     <?php foreach ($rows as $r): ?>
       <tr>
         <td><?= Helpers::esc(date('d M Y', strtotime($r['receipt_date']))) ?></td>
         <td><?= Helpers::esc($r['customer_name']) ?></td>
+        <td><?php if ($r['sale_number']): ?>
+          <a href="<?= Helpers::esc(Helpers::url('/sales/' . $r['sale_id'])) ?>"><?= Helpers::esc($r['sale_number']) ?></a>
+        <?php else: ?>
+          <span class="text-secondary small">on account</span>
+        <?php endif; ?></td>
         <td class="text-num"><?= Helpers::esc(Helpers::money($r['amount'])) ?></td>
         <td><?= Helpers::esc(strtoupper($r['mode'])) ?></td>
         <td><?= Helpers::esc($r['reference']) ?></td>
@@ -46,7 +51,7 @@ use App\Helpers;
         </td>
       </tr>
     <?php endforeach; ?>
-    <?php if (!$rows): ?><tr><td colspan="7" class="text-secondary p-3">No receipts yet.</td></tr><?php endif; ?>
+    <?php if (!$rows): ?><tr><td colspan="8" class="text-secondary p-3">No receipts yet.</td></tr><?php endif; ?>
   </tbody>
 </table>
 </div></div>

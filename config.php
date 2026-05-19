@@ -4,7 +4,7 @@
 // at the project root blocks direct HTTP access to this file.
 
 return [
-    'app_name' => 'Aniket Inventory & WorkOrder',
+    'app_name' => 'Inventory & WorkOrder',
     'app_url'  => 'https://aromen.biz/aniket', // base URL, no trailing slash
     'app_env'  => 'production',
     'timezone' => 'Asia/Kolkata',

@@ -187,6 +187,7 @@ CREATE TABLE stock_movements (
 CREATE TABLE receipts (
     id            INT UNSIGNED NOT NULL AUTO_INCREMENT,
     customer_id   INT UNSIGNED NOT NULL,
+    sale_id       INT UNSIGNED NULL,
     receipt_date  DATE         NOT NULL,
     amount        DECIMAL(14,2) NOT NULL,
     mode          ENUM('cash','bank','upi','cheque','other') NOT NULL DEFAULT 'cash',
@@ -196,9 +197,12 @@ CREATE TABLE receipts (
     created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     KEY idx_receipts_customer (customer_id),
+    KEY idx_receipts_sale (sale_id),
     KEY idx_receipts_date (receipt_date),
     CONSTRAINT fk_receipts_customer FOREIGN KEY (customer_id) REFERENCES customers(id)
         ON UPDATE CASCADE ON DELETE RESTRICT,
+    CONSTRAINT fk_receipts_sale FOREIGN KEY (sale_id) REFERENCES sales(id)
+        ON UPDATE CASCADE ON DELETE SET NULL,
     CONSTRAINT fk_receipts_user FOREIGN KEY (created_by) REFERENCES users(id)
         ON UPDATE CASCADE ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
