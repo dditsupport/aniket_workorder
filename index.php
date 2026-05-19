@@ -61,16 +61,17 @@ $router->get('/products/{id}/bom',       [\App\Controllers\BomController::class,
 $router->post('/products/{id}/bom',      [\App\Controllers\BomController::class, 'store'],   'write');
 $router->post('/products/{id}/bom/{bid}/delete', [\App\Controllers\BomController::class, 'destroy'], 'write');
 
-// Price lists (named tiers; each customer attaches to one)
-$router->get('/price-lists',                     [\App\Controllers\PriceListController::class, 'index']);
-$router->get('/price-lists/new',                 [\App\Controllers\PriceListController::class, 'create'], 'write');
-$router->post('/price-lists',                    [\App\Controllers\PriceListController::class, 'store'],  'write');
-$router->get('/price-lists/{id}',                [\App\Controllers\PriceListController::class, 'show']);
-$router->get('/price-lists/{id}/edit',           [\App\Controllers\PriceListController::class, 'edit'],   'write');
-$router->post('/price-lists/{id}',               [\App\Controllers\PriceListController::class, 'update'], 'write');
-$router->post('/price-lists/{id}/delete',        [\App\Controllers\PriceListController::class, 'destroy'],'admin');
-$router->post('/price-lists/{id}/items',         [\App\Controllers\PriceListController::class, 'upsertItem'], 'write');
-$router->post('/price-lists/{id}/items/{lid}/delete', [\App\Controllers\PriceListController::class, 'destroyItem'], 'write');
+// Price lists (named tiers; each customer attaches to one).
+// Admin-only end-to-end: view, create, edit, delete, item management.
+$router->get('/price-lists',                          [\App\Controllers\PriceListController::class, 'index'],       'admin');
+$router->get('/price-lists/new',                      [\App\Controllers\PriceListController::class, 'create'],      'admin');
+$router->post('/price-lists',                         [\App\Controllers\PriceListController::class, 'store'],       'admin');
+$router->get('/price-lists/{id}',                     [\App\Controllers\PriceListController::class, 'show'],        'admin');
+$router->get('/price-lists/{id}/edit',                [\App\Controllers\PriceListController::class, 'edit'],        'admin');
+$router->post('/price-lists/{id}',                    [\App\Controllers\PriceListController::class, 'update'],      'admin');
+$router->post('/price-lists/{id}/delete',             [\App\Controllers\PriceListController::class, 'destroy'],     'admin');
+$router->post('/price-lists/{id}/items',              [\App\Controllers\PriceListController::class, 'upsertItem'], 'admin');
+$router->post('/price-lists/{id}/items/{lid}/delete', [\App\Controllers\PriceListController::class, 'destroyItem'],'admin');
 
 // Work orders
 $router->get('/work-orders',                [\App\Controllers\WorkOrderController::class, 'index']);

@@ -11,7 +11,7 @@ use App\Helpers;
     <?php if ($list['description']): ?><small class="text-secondary"><?= Helpers::esc($list['description']) ?></small><?php endif; ?>
   </div>
   <div>
-    <?php if (Auth::can('write')): ?>
+    <?php if (Auth::can('admin')): ?>
       <a class="btn btn-outline-secondary btn-sm" href="<?= Helpers::esc(Helpers::url('/price-lists/' . $list['id'] . '/edit')) ?>">Edit list</a>
     <?php endif; ?>
     <a class="btn btn-link btn-sm" href="<?= Helpers::esc(Helpers::url('/price-lists')) ?>">&larr; All Lists</a>
@@ -31,7 +31,7 @@ use App\Helpers;
             <td class="text-num"><?= Helpers::esc(Helpers::money($ln['price'])) ?></td>
             <td class="text-num text-secondary"><?= Helpers::esc(Helpers::money($ln['base_price'])) ?></td>
             <td class="text-end">
-              <?php if (Auth::can('write')): ?>
+              <?php if (Auth::can('admin')): ?>
               <form method="post" action="<?= Helpers::esc(Helpers::url('/price-lists/' . $list['id'] . '/items/' . $ln['id'] . '/delete')) ?>" class="d-inline" onsubmit="return confirm('Remove this price?')">
                 <?= Csrf::field() ?>
                 <button class="btn btn-sm btn-outline-danger">Remove</button>
@@ -46,7 +46,7 @@ use App\Helpers;
     </div></div>
   </div>
 
-  <?php if (Auth::can('write')): ?>
+  <?php if (Auth::can('admin')): ?>
   <div class="col-md-4">
     <div class="card"><div class="card-body">
       <h5>Add / Update price</h5>

@@ -5,7 +5,7 @@ use App\Helpers;
 ?>
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h2>Price Lists</h2>
-  <?php if (Auth::can('write')): ?>
+  <?php if (Auth::can('admin')): ?>
     <a class="btn btn-primary" href="<?= Helpers::esc(Helpers::url('/price-lists/new')) ?>">+ New Price List</a>
   <?php endif; ?>
 </div>
@@ -23,7 +23,7 @@ use App\Helpers;
         <td class="text-num"><?= (int)$r['customer_count'] ?></td>
         <td><?= $r['active'] ? '<span class="badge text-bg-success">Active</span>' : '<span class="badge text-bg-secondary">Inactive</span>' ?></td>
         <td class="text-end">
-          <?php if (Auth::can('write')): ?>
+          <?php if (Auth::can('admin')): ?>
             <a class="btn btn-sm btn-outline-secondary" href="<?= Helpers::esc(Helpers::url('/price-lists/' . $r['id'] . '/edit')) ?>">Edit</a>
           <?php endif; ?>
           <?php if (Auth::can('admin')): ?>
