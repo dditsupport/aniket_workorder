@@ -11,6 +11,7 @@ DROP TABLE IF EXISTS stock_movements;
 DROP TABLE IF EXISTS wo_rm_allocations;
 DROP TABLE IF EXISTS work_orders;
 DROP TABLE IF EXISTS wo_counters;
+DROP TABLE IF EXISTS price_list_tiers;
 DROP TABLE IF EXISTS price_list_items;
 DROP TABLE IF EXISTS bom;
 DROP TABLE IF EXISTS products;
@@ -117,6 +118,24 @@ CREATE TABLE price_list_items (
     UNIQUE KEY uq_pli (price_list_id, item_kind, item_id),
     KEY idx_pli_item (item_kind, item_id),
     CONSTRAINT fk_pli_list FOREIGN KEY (price_list_id) REFERENCES price_lists(id)
+        ON UPDATE CASCADE ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Optional quantity-break pricing for a price-list item. When a sale line
+-- opts in (per-line "qty discount" checkbox), the tier whose [min_qty,max_qty]
+-- range contains the line quantity overrides the flat price_list_items price.
+-- max_qty NULL = open-ended top tier (e.g. "51 and above").
+CREATE TABLE price_list_tiers (
+    id            INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    price_list_id INT UNSIGNED NOT NULL,
+    item_kind     ENUM('RM','FG') NOT NULL,
+    item_id       INT UNSIGNED NOT NULL,
+    min_qty       DECIMAL(12,3) NOT NULL,
+    max_qty       DECIMAL(12,3) NULL,
+    price         DECIMAL(12,2) NOT NULL,
+    PRIMARY KEY (id),
+    KEY idx_plt (price_list_id, item_kind, item_id, min_qty),
+    CONSTRAINT fk_plt_list FOREIGN KEY (price_list_id) REFERENCES price_lists(id)
         ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

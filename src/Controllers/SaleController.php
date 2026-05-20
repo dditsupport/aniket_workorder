@@ -43,11 +43,20 @@ final class SaleController
         $customers = $db->query("SELECT id, code, name FROM customers WHERE active=1 ORDER BY name")->fetchAll();
         $products  = $db->query("SELECT id, code, name, unit, base_price, stock_qty FROM products ORDER BY name")->fetchAll();
         $rms       = $db->query("SELECT id, code, name, unit, sale_price, stock_qty FROM raw_materials ORDER BY name")->fetchAll();
+        // Non-cancelled work orders, so a sale can be pre-filled from a WO's produced item.
+        $workorders = $db->query(
+            "SELECT wo.id, wo.wo_number, wo.customer_id, wo.product_id, wo.quantity, wo.status,
+                    p.code AS product_code, p.name AS product_name
+             FROM work_orders wo JOIN products p ON p.id = wo.product_id
+             WHERE wo.status <> 'cancelled'
+             ORDER BY wo.id DESC"
+        )->fetchAll();
         Helpers::render('sales/form', [
             'title' => 'New Sale',
             'customers' => $customers,
             'products' => $products,
             'rms' => $rms,
+            'workorders' => $workorders,
         ]);
     }
 
@@ -60,6 +69,7 @@ final class SaleController
         $itemIds = $_POST['line_item_id'] ?? [];
         $qtys    = $_POST['line_qty']     ?? [];
         $prices  = $_POST['line_price']   ?? [];
+        $discs   = $_POST['line_qtydisc'] ?? [];
 
         if ($cid <= 0 || $date === '') {
             Helpers::flash('error', 'Customer and date are required.');
@@ -78,8 +88,9 @@ final class SaleController
             $iid = (int)($itemIds[$i] ?? 0);
             $q = (float)($qtys[$i] ?? 0);
             $up = isset($prices[$i]) && $prices[$i] !== '' ? (float)$prices[$i] : null;
+            $disc = (string)($discs[$i] ?? '0') === '1';
             if (!in_array($k, ['RM','FG'], true) || $iid <= 0 || $q <= 0) continue;
-            $lines[] = ['kind' => $k, 'item_id' => $iid, 'qty' => $q, 'unit_price' => $up];
+            $lines[] = ['kind' => $k, 'item_id' => $iid, 'qty' => $q, 'unit_price' => $up, 'qty_disc' => $disc];
         }
         if (!$lines) {
             Helpers::flash('error', 'No valid lines provided.');
@@ -105,7 +116,12 @@ final class SaleController
                     throw new \RuntimeException("Insufficient stock for {$item['code']} — need {$ln['qty']}, have {$item['stock_qty']}.");
                 }
                 $up = $ln['unit_price'];
-                if ($up === null) $up = self::resolvePrice($db, $cid, $ln['kind'], $ln['item_id'], (float)$item['base_price']);
+                if ($ln['qty_disc']) {
+                    // Discount opted in: server authoritatively applies the qty tier.
+                    $up = self::resolvePrice($db, $cid, $ln['kind'], $ln['item_id'], (float)$item['base_price'], $ln['qty'], true);
+                } elseif ($up === null) {
+                    $up = self::resolvePrice($db, $cid, $ln['kind'], $ln['item_id'], (float)$item['base_price']);
+                }
                 $lt = round($up * $ln['qty'], 2);
                 $total += $lt;
                 $resolved[] = $ln + ['unit_price_final' => $up, 'line_total' => $lt];
@@ -231,6 +247,8 @@ final class SaleController
         $cid  = (int)Helpers::input('customer_id', 0);
         $kind = (string)Helpers::input('item_kind', '');
         $iid  = (int)Helpers::input('item_id', 0);
+        $qty  = (float)Helpers::input('qty', 0);
+        $tier = (string)Helpers::input('tier', '0') === '1';
         if ($cid <= 0 || !in_array($kind, ['RM','FG'], true) || $iid <= 0) {
             echo json_encode(['price' => null]); return;
         }
@@ -243,21 +261,36 @@ final class SaleController
         }
         $stmt->execute([$iid]);
         $base = (float)$stmt->fetchColumn();
-        echo json_encode(['price' => self::resolvePrice($db, $cid, $kind, $iid, $base)]);
+        echo json_encode(['price' => self::resolvePrice($db, $cid, $kind, $iid, $base, $qty, $tier)]);
     }
 
-    private static function resolvePrice(PDO $db, int $cid, string $kind, int $iid, float $fallback): float
+    private static function resolvePrice(PDO $db, int $cid, string $kind, int $iid, float $fallback, float $qty = 0, bool $useTier = false): float
     {
+        // Customer's assigned price list id.
+        $stmt = $db->prepare("SELECT price_list_id FROM customers WHERE id=?");
+        $stmt->execute([$cid]);
+        $plId = $stmt->fetchColumn();
+        if ($plId === false || $plId === null) return $fallback;
+        $plId = (int)$plId;
+
+        // Quantity-break tier first (only when opted in and a qty is given).
+        if ($useTier && $qty > 0) {
+            $t = $db->prepare(
+                "SELECT price FROM price_list_tiers
+                 WHERE price_list_id=? AND item_kind=? AND item_id=?
+                   AND min_qty <= ? AND (max_qty IS NULL OR max_qty >= ?)
+                 ORDER BY min_qty DESC LIMIT 1"
+            );
+            $t->execute([$plId, $kind, $iid, $qty, $qty]);
+            $tp = $t->fetchColumn();
+            if ($tp !== false && $tp !== null) return (float)$tp;
+        }
+
+        // Flat price-list price.
         $stmt = $db->prepare(
-            "SELECT pli.price
-             FROM customers c
-             JOIN price_list_items pli
-               ON pli.price_list_id = c.price_list_id
-              AND pli.item_kind = ?
-              AND pli.item_id = ?
-             WHERE c.id = ?"
+            "SELECT price FROM price_list_items WHERE price_list_id=? AND item_kind=? AND item_id=?"
         );
-        $stmt->execute([$kind, $iid, $cid]);
+        $stmt->execute([$plId, $kind, $iid]);
         $p = $stmt->fetchColumn();
         return ($p !== false && $p !== null) ? (float)$p : $fallback;
     }

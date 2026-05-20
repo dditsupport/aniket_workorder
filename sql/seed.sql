@@ -88,6 +88,21 @@ INSERT INTO price_list_items (price_list_id, item_kind, item_id, price) VALUES
   (4, 'RM', 1,   55.00), (4, 'RM', 3,  108.00);
 
 -- ---------------------------------------------------------------
+-- Quantity-break tiers (optional; applied per sale line when the
+-- "qty discount" checkbox is ticked). Demo on List 2 "10% Off":
+--   FG1 Bracket: 1-5 @765, 6-15 @730, 16-25 @700, 26+ @680
+--   FG2 Motor Mount: 1-5 @1080, 6-15 @1040, 16+ @1000
+-- ---------------------------------------------------------------
+INSERT INTO price_list_tiers (price_list_id, item_kind, item_id, min_qty, max_qty, price) VALUES
+  (2, 'FG', 1,  1,    5, 765.00),
+  (2, 'FG', 1,  6,   15, 730.00),
+  (2, 'FG', 1, 16,   25, 700.00),
+  (2, 'FG', 1, 26, NULL, 680.00),
+  (2, 'FG', 2,  1,    5, 1080.00),
+  (2, 'FG', 2,  6,   15, 1040.00),
+  (2, 'FG', 2, 16, NULL, 1000.00);
+
+-- ---------------------------------------------------------------
 -- Work order (draft, demonstrates flow)
 -- ---------------------------------------------------------------
 INSERT INTO wo_counters (year, last_seq) VALUES (2026, 1);

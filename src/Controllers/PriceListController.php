@@ -214,13 +214,61 @@ final class PriceListController
         $products = $db->query("SELECT id, code, name, base_price FROM products ORDER BY name")->fetchAll();
         $rms      = $db->query("SELECT id, code, name, sale_price FROM raw_materials ORDER BY name")->fetchAll();
 
+        $tiers = $db->prepare(
+            "SELECT t.*,
+                    CASE WHEN t.item_kind='FG' THEN pr.code ELSE rm.code END AS item_code,
+                    CASE WHEN t.item_kind='FG' THEN pr.name ELSE rm.name END AS item_name
+             FROM price_list_tiers t
+             LEFT JOIN products pr      ON t.item_kind='FG' AND pr.id = t.item_id
+             LEFT JOIN raw_materials rm ON t.item_kind='RM' AND rm.id = t.item_id
+             WHERE t.price_list_id = ?
+             ORDER BY t.item_kind, item_name, t.min_qty"
+        );
+        $tiers->execute([$id]);
+
         Helpers::render('price_list/show', [
             'title' => $list['name'],
             'list' => $list,
             'lines' => $lines->fetchAll(),
             'products' => $products,
             'rms' => $rms,
+            'tiers' => $tiers->fetchAll(),
         ]);
+    }
+
+    public static function addTier(array $p): void
+    {
+        $id = (int)$p['id'];
+        self::find($id);
+        $kind = (string)Helpers::input('item_kind', '');
+        $iid  = (int)Helpers::input('item_id', 0);
+        $min  = (float)Helpers::input('min_qty', 0);
+        $maxRaw = trim((string)Helpers::input('max_qty', ''));
+        $max  = $maxRaw === '' ? null : (float)$maxRaw;
+        $price = (float)Helpers::input('price', -1);
+        if (!in_array($kind, ['RM','FG'], true) || $iid <= 0 || $min <= 0 || $price < 0) {
+            Helpers::flash('error', 'Pick item, a positive min qty, and a non-negative price.');
+            Helpers::redirect('/price-lists/' . $id);
+        }
+        if ($max !== null && $max < $min) {
+            Helpers::flash('error', 'Max qty cannot be less than min qty.');
+            Helpers::redirect('/price-lists/' . $id);
+        }
+        Database::pdo()->prepare(
+            "INSERT INTO price_list_tiers (price_list_id, item_kind, item_id, min_qty, max_qty, price) VALUES (?,?,?,?,?,?)"
+        )->execute([$id, $kind, $iid, $min, $max, $price]);
+        Helpers::flash('success', 'Quantity tier added.');
+        Helpers::redirect('/price-lists/' . $id);
+    }
+
+    public static function removeTier(array $p): void
+    {
+        $id  = (int)$p['id'];
+        $tid = (int)$p['tid'];
+        Database::pdo()->prepare("DELETE FROM price_list_tiers WHERE id=? AND price_list_id=?")
+            ->execute([$tid, $id]);
+        Helpers::flash('success', 'Tier removed.');
+        Helpers::redirect('/price-lists/' . $id);
     }
 
     public static function upsertItem(array $p): void

@@ -86,6 +86,8 @@ $router->post('/price-lists/{id}/items/import',       [\App\Controllers\PriceLis
 $router->post('/price-lists/{id}/items',              [\App\Controllers\PriceListController::class, 'upsertItem'],   'admin');
 $router->post('/price-lists/{id}/items/{lid}',        [\App\Controllers\PriceListController::class, 'updateItem'],  'admin');
 $router->post('/price-lists/{id}/items/{lid}/delete', [\App\Controllers\PriceListController::class, 'destroyItem'],'admin');
+$router->post('/price-lists/{id}/tiers',              [\App\Controllers\PriceListController::class, 'addTier'],    'admin');
+$router->post('/price-lists/{id}/tiers/{tid}/delete', [\App\Controllers\PriceListController::class, 'removeTier'],'admin');
 
 // Work orders
 $router->get('/work-orders',                [\App\Controllers\WorkOrderController::class, 'index']);
@@ -113,6 +115,7 @@ $router->post('/receipts/{id}/delete', [\App\Controllers\ReceiptController::clas
 
 // Reports
 $router->get('/reports/rm-stock',           [\App\Controllers\ReportController::class, 'rmStock']);
+$router->get('/reports/rm-ledger',          [\App\Controllers\ReportController::class, 'rmLedger']);
 $router->get('/reports/fg-stock',           [\App\Controllers\ReportController::class, 'fgStock']);
 $router->get('/reports/wo-status',          [\App\Controllers\ReportController::class, 'woStatus']);
 $router->get('/reports/customer-outstanding',[\App\Controllers\ReportController::class, 'customerOutstanding']);

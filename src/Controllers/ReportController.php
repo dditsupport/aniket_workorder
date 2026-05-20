@@ -18,6 +18,61 @@ final class ReportController
         Helpers::render('reports/rm_stock', ['title' => 'RM Stock Report', 'rows' => $rows]);
     }
 
+    public static function rmLedger(): void
+    {
+        $db = Database::pdo();
+        $rmId = (int)Helpers::input('rm_id', 0);
+        $from = trim((string)Helpers::input('from', ''));
+        $to   = trim((string)Helpers::input('to', ''));
+        $rms = $db->query("SELECT id, code, name, unit, stock_qty FROM raw_materials ORDER BY name")->fetchAll();
+
+        $rm = null; $opening = 0.0; $rows = []; $closing = 0.0;
+        if ($rmId > 0) {
+            foreach ($rms as $r) { if ((int)$r['id'] === $rmId) { $rm = $r; break; } }
+            if ($rm) {
+                // Opening balance = net of all movements strictly before $from (if given).
+                if ($from !== '') {
+                    $o = $db->prepare(
+                        "SELECT COALESCE(SUM(qty_in - qty_out),0)
+                         FROM stock_movements
+                         WHERE item_type='RM' AND item_id=? AND DATE(created_at) < ?"
+                    );
+                    $o->execute([$rmId, $from]);
+                    $opening = (float)$o->fetchColumn();
+                }
+                $where = "item_type='RM' AND item_id=?"; $args = [$rmId];
+                if ($from !== '') { $where .= " AND DATE(created_at) >= ?"; $args[] = $from; }
+                if ($to   !== '') { $where .= " AND DATE(created_at) <= ?"; $args[] = $to; }
+                $stmt = $db->prepare(
+                    "SELECT sm.created_at, sm.qty_in, sm.qty_out, sm.ref_type, sm.ref_id, sm.note,
+                            u.name AS user_name
+                     FROM stock_movements sm
+                     LEFT JOIN users u ON u.id = sm.created_by
+                     WHERE {$where}
+                     ORDER BY sm.created_at, sm.id"
+                );
+                $stmt->execute($args);
+                $balance = $opening;
+                foreach ($stmt->fetchAll() as $m) {
+                    $balance += (float)$m['qty_in'] - (float)$m['qty_out'];
+                    $m['balance'] = $balance;
+                    $rows[] = $m;
+                }
+                $closing = $balance;
+            }
+        }
+
+        Helpers::render('reports/rm_ledger', [
+            'title' => 'RM Stock Ledger',
+            'rms' => $rms,
+            'rm' => $rm,
+            'rows' => $rows,
+            'opening' => $opening,
+            'closing' => $closing,
+            'filter' => ['rm_id' => $rmId, 'from' => $from, 'to' => $to],
+        ]);
+    }
+
     public static function fgStock(): void
     {
         $rows = Database::pdo()->query(

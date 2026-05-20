@@ -11,8 +11,9 @@ shared hosting (MilesWeb / cPanel).
 - Multi-user login with roles: `admin` / `operator` / `viewer`.
 - Masters: Customers (each attached to one named Price List), Raw Materials (sellable, with sale price), Products (Final, sellable), BOM.
 - Price Lists: named tiers ("10% Off", "Registered Vendor", etc.). One row per list in `price_lists`, one row per (list, item) in `price_list_items` — no new column per tier, just more rows. Items not listed fall back to the item's default sale price.
+  - Optional **quantity-break tiers** (`price_list_tiers`): per item, set price bands like 1-5 / 6-15 / 16-25 / 26+. Applied per sale line only when its **Qty disc** checkbox is ticked.
 - Work Orders with auto-generated number `WO-YYYY-NNNN`.
-- Sales: multi-line bills mixing Products and Raw Materials, auto number `SALE-YYYY-NNNN`, immediate stock-out on save.
+- Sales: multi-line bills mixing Products and Raw Materials, auto number `SALE-YYYY-NNNN`, immediate stock-out on save. Can pre-fill a line from an existing Work Order. Per-invoice pending amount shown; click pending to open a pre-filled receipt.
 - Workflow: **Draft → In Progress → Completed → Cancelled**.
   - Moving to **In Progress** reserves & deducts RM stock (per BOM).
   - **Completed** records consumption, increases Final stock.
@@ -20,6 +21,7 @@ shared hosting (MilesWeb / cPanel).
 - Receipts: simple "amount received" log per customer (matched against WO + Sale totals).
 - Reports:
   - RM Stock + low-stock highlight
+  - RM Stock Ledger (per material, running balance with opening/closing)
   - Final Product Stock + stock value at base price
   - WO Status (filter by customer/status/date)
   - Customer Outstanding (billed vs received)
@@ -112,6 +114,16 @@ Users page right after import.
 **Security note:** v4 onwards stores user passwords in plain text per
 the owner's decision. Anyone with DB or backup access can read every
 user's password. Treat the DB and its backups accordingly.
+
+For v4 -> v5 (receipts against invoices) and v5 -> v6 (quantity tiers):
+
+```bash
+mysql -u <user> -p <db> < sql/migration_5_receipt_against_sale.sql
+mysql -u <user> -p <db> < sql/migration_6_qty_tiers.sql
+```
+
+migration 5 adds `receipts.sale_id`; migration 6 adds the
+`price_list_tiers` table.
 
 ## Notes / Defaults
 - Default admin: `admin` / `admin123` — change immediately.

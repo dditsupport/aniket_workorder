@@ -31,6 +31,7 @@ $role = $u['role'] ?? '';
           <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#">Reports</a>
           <ul class="dropdown-menu">
             <li><a class="dropdown-item" href="<?= Helpers::esc(Helpers::url('/reports/rm-stock')) ?>">RM Stock</a></li>
+            <li><a class="dropdown-item" href="<?= Helpers::esc(Helpers::url('/reports/rm-ledger')) ?>">RM Stock Ledger</a></li>
             <li><a class="dropdown-item" href="<?= Helpers::esc(Helpers::url('/reports/fg-stock')) ?>">Final Product Stock</a></li>
             <li><a class="dropdown-item" href="<?= Helpers::esc(Helpers::url('/reports/wo-status')) ?>">WO Status</a></li>
             <li><a class="dropdown-item" href="<?= Helpers::esc(Helpers::url('/reports/customer-outstanding')) ?>">Customer Outstanding</a></li>
