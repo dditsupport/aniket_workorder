@@ -113,11 +113,11 @@ final class ReportController
     public static function customerOutstanding(): void
     {
         $rows = Database::pdo()->query(
+            // Only Sales are billed to the customer. Work Orders are production
+            // documents and must never add to what the customer owes.
             "SELECT c.id, c.code, c.name,
-                COALESCE((SELECT SUM(total_amount) FROM work_orders w
-                           WHERE w.customer_id = c.id AND w.status <> 'cancelled'),0)
-                + COALESCE((SELECT SUM(total_amount) FROM sales s
-                             WHERE s.customer_id = c.id),0) AS billed,
+                COALESCE((SELECT SUM(total_amount) FROM sales s
+                           WHERE s.customer_id = c.id),0) AS billed,
                 COALESCE((SELECT SUM(amount) FROM receipts r WHERE r.customer_id = c.id),0) AS received
              FROM customers c
              ORDER BY c.name"

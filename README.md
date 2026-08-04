@@ -24,7 +24,7 @@ shared hosting (MilesWeb / cPanel).
   - RM Stock Ledger (per material, running balance with opening/closing)
   - Final Product Stock + stock value at base price
   - WO Status (filter by customer/status/date)
-  - Customer Outstanding (billed vs received)
+  - Customer Outstanding (billed vs received; billed = Sales only, Work Orders are not billed)
 
 ## Project layout
 ```

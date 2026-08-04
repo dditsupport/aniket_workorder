@@ -60,7 +60,7 @@ use App\Helpers;
           </tbody>
         </table>
       </div>
-      <div class="card-footer text-end"><strong>Total outstanding: <?= Helpers::esc(Helpers::money($outstanding)) ?></strong></div>
+      <div class="card-footer text-end"><strong>Total outstanding (sales): <?= Helpers::esc(Helpers::money($outstanding)) ?></strong></div>
     </div>
   </div>
 </div>
