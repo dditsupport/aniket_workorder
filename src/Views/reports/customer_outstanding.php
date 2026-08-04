@@ -26,4 +26,4 @@ use App\Helpers;
   </tfoot>
 </table>
 </div></div>
-<p class="text-secondary small">Billed = non-cancelled Work Order totals + Sale totals. Outstanding = Billed &minus; Received.</p>
+<p class="text-secondary small">Billed = Sale totals only (Work Orders are production documents and are not billed). Outstanding = Billed &minus; Received.</p>

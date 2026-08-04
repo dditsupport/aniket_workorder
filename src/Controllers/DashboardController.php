@@ -31,9 +31,9 @@ final class DashboardController
              JOIN products p ON p.id = wo.product_id
              ORDER BY wo.id DESC LIMIT 10"
         )->fetchAll();
+        // Outstanding is driven by Sales only; Work Orders are not billed to the customer.
         $outstanding = (float)$db->query(
-            "SELECT COALESCE((SELECT SUM(total_amount) FROM work_orders WHERE status <> 'cancelled'),0)
-                  + COALESCE((SELECT SUM(total_amount) FROM sales),0)
+            "SELECT COALESCE((SELECT SUM(total_amount) FROM sales),0)
                   - COALESCE((SELECT SUM(amount) FROM receipts),0)"
         )->fetchColumn();
         Helpers::render('dashboard/index', [
