@@ -9,7 +9,12 @@ $pending = $total - $paid;
 ?>
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h2><?= Helpers::esc($sale['sale_number']) ?></h2>
-  <a class="btn btn-link" href="<?= Helpers::esc(Helpers::url('/sales')) ?>">&larr; All Sales</a>
+  <div>
+    <a class="btn btn-outline-dark" target="_blank"
+       href="<?= Helpers::esc(Helpers::url('/sales/' . $sale['id'] . '/print')) ?>"
+       title="Three copies on one A4 sheet">&#128424; Print bill</a>
+    <a class="btn btn-link" href="<?= Helpers::esc(Helpers::url('/sales')) ?>">&larr; All Sales</a>
+  </div>
 </div>
 
 <div class="row g-3">

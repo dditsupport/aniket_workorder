@@ -208,6 +208,43 @@ final class SaleController
         ]);
     }
 
+    /** Printable bill: three identical copies laid out on one A4 sheet. */
+    public static function printBill(array $p): void
+    {
+        $id = (int)$p['id'];
+        $db = Database::pdo();
+        $stmt = $db->prepare(
+            "SELECT s.*, c.name AS customer_name, c.code AS customer_code,
+                    c.address AS customer_address, c.gstin AS customer_gstin,
+                    c.phone AS customer_phone,
+                    COALESCE((SELECT SUM(r.amount) FROM receipts r WHERE r.sale_id = s.id), 0) AS paid_amount
+             FROM sales s JOIN customers c ON c.id = s.customer_id
+             WHERE s.id = ?"
+        );
+        $stmt->execute([$id]);
+        $sale = $stmt->fetch();
+        if (!$sale) Helpers::abort(404, 'Sale not found');
+
+        $lines = $db->prepare(
+            "SELECT si.*,
+                    CASE WHEN si.item_kind='FG' THEN p.code ELSE rm.code END AS item_code,
+                    CASE WHEN si.item_kind='FG' THEN p.name ELSE rm.name END AS item_name,
+                    CASE WHEN si.item_kind='FG' THEN p.unit ELSE rm.unit END AS unit
+             FROM sale_items si
+             LEFT JOIN products p       ON si.item_kind='FG' AND p.id  = si.item_id
+             LEFT JOIN raw_materials rm ON si.item_kind='RM' AND rm.id = si.item_id
+             WHERE si.sale_id = ? ORDER BY si.id"
+        );
+        $lines->execute([$id]);
+
+        Helpers::renderPlain('sales/print', [
+            'sale'  => $sale,
+            'lines' => $lines->fetchAll(),
+            // ?autoprint=0 opens the sheet without firing the browser print dialog.
+            'autoprint' => (string)Helpers::input('autoprint', '1') !== '0',
+        ]);
+    }
+
     public static function destroy(array $p): void
     {
         $id = (int)$p['id'];
