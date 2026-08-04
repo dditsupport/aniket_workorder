@@ -14,6 +14,7 @@ shared hosting (MilesWeb / cPanel).
   - Optional **quantity-break tiers** (`price_list_tiers`): per item, set price bands like 1-5 / 6-15 / 16-25 / 26+. Applied per sale line only when its **Qty disc** checkbox is ticked.
 - Work Orders with auto-generated number `WO-YYYY-NNNN`.
 - Sales: multi-line bills mixing Products and Raw Materials, auto number `SALE-YYYY-NNNN`, immediate stock-out on save. Can pre-fill a line from an existing Work Order. Per-invoice pending amount shown; click pending to open a pre-filled receipt.
+  - **Print bill** (`/sales/{id}/print`): three copies — Original / Duplicate / Triplicate — on a single A4 sheet, one per third, with a dashed cut line between them. The print dialog opens automatically (append `?autoprint=0` to skip it). Bills longer than 7 lines cannot fit three-up, so they fall back to one full-page copy per sheet — three copies on three pages, with no line dropped. Header details and copy labels come from the `company` / `bill.copy_labels` keys in `config.php`.
 - Workflow: **Draft → In Progress → Completed → Cancelled**.
   - Moving to **In Progress** reserves & deducts RM stock (per BOM).
   - **Completed** records consumption, increases Final stock.

@@ -104,6 +104,7 @@ $router->get('/sales',                [\App\Controllers\SaleController::class, '
 $router->get('/sales/new',            [\App\Controllers\SaleController::class, 'create'], 'write');
 $router->post('/sales',               [\App\Controllers\SaleController::class, 'store'],  'write');
 $router->get('/sales/{id}',           [\App\Controllers\SaleController::class, 'show']);
+$router->get('/sales/{id}/print',     [\App\Controllers\SaleController::class, 'printBill']);
 $router->post('/sales/{id}/delete',   [\App\Controllers\SaleController::class, 'destroy'],'admin');
 $router->get('/api/sale-price',       [\App\Controllers\SaleController::class, 'priceLookup']);
 

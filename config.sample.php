@@ -12,6 +12,20 @@ return [
     'timezone' => 'Asia/Kolkata',
     'currency' => '₹',
 
+    // Printed on the sales bill header. Leave a value empty to hide that line.
+    'company' => [
+        'name'    => 'Your Firm Name',   // falls back to app_name when omitted
+        'address' => "Street, Area\nCity, State - PIN",
+        'gstin'   => '',
+        'phone'   => '',
+        'email'   => '',
+    ],
+
+    // Labels for the three bill copies printed on one A4 sheet (must be 3).
+    'bill' => [
+        'copy_labels' => ['Original for Buyer', 'Duplicate for Transporter', 'Triplicate for Supplier'],
+    ],
+
     'db' => [
         'host'    => 'localhost',
         'port'    => 3306,

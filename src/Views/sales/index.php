@@ -23,7 +23,7 @@ use App\Helpers;
 
 <div class="card"><div class="card-body p-0">
 <table class="table table-striped mb-0">
-  <thead><tr><th>Sale #</th><th>Date</th><th>Customer</th><th class="text-num">Lines</th><th class="text-num">Total</th><th class="text-num">Paid</th><th class="text-num">Pending</th></tr></thead>
+  <thead><tr><th>Sale #</th><th>Date</th><th>Customer</th><th class="text-num">Lines</th><th class="text-num">Total</th><th class="text-num">Paid</th><th class="text-num">Pending</th><th></th></tr></thead>
   <tbody>
     <?php $grandPending = 0.0; foreach ($rows as $r):
       $pending = (float)$r['total_amount'] - (float)$r['paid_amount'];
@@ -49,12 +49,17 @@ use App\Helpers;
             </a>
           <?php endif; ?>
         </td>
+        <td class="text-end">
+          <a class="btn btn-sm btn-outline-dark" target="_blank"
+             href="<?= Helpers::esc(Helpers::url('/sales/' . (int)$r['id'] . '/print')) ?>"
+             title="Print bill — 3 copies on one A4 sheet">&#128424; Print</a>
+        </td>
       </tr>
     <?php endforeach; ?>
-    <?php if (!$rows): ?><tr><td colspan="7" class="text-secondary p-3">No sales recorded.</td></tr><?php endif; ?>
+    <?php if (!$rows): ?><tr><td colspan="8" class="text-secondary p-3">No sales recorded.</td></tr><?php endif; ?>
   </tbody>
   <?php if ($rows): ?>
-  <tfoot><tr><th colspan="6" class="text-end">Total pending</th><th class="text-num text-danger"><?= Helpers::esc(Helpers::money($grandPending)) ?></th></tr></tfoot>
+  <tfoot><tr><th colspan="6" class="text-end">Total pending</th><th class="text-num text-danger"><?= Helpers::esc(Helpers::money($grandPending)) ?></th><th></th></tr></tfoot>
   <?php endif; ?>
 </table>
 </div></div>
